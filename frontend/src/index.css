@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    border-color: #E6E4DE;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    color: #121214;
+    background-color: #FAF9F5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FAF9F5;
+    color: #121214;
+    overflow-x: hidden;
+  }
+}
+
+/* Hairline borders and subtle depth */
+.border-subtle {
+  border: 1px solid #E6E4DE;
+}
+
+.border-subtle-dark {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Heatmap visual glow effects without layout disruption */
+.heatmap-glow-high {
+  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.78) 0%, rgba(249, 115, 22, 0.55) 40%, rgba(139, 92, 246, 0.25) 70%, transparent 100%);
+  filter: blur(14px);
+}
+
+.heatmap-glow-mid {
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.7) 0%, rgba(139, 92, 246, 0.45) 45%, rgba(59, 130, 246, 0.15) 75%, transparent 100%);
+  filter: blur(16px);
+}
+
+.heatmap-glow-low {
+  background: radial-gradient(circle at center, rgba(124, 58, 237, 0.55) 0%, rgba(99, 102, 241, 0.3) 50%, transparent 80%);
+  filter: blur(18px);
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF9F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5D3CC;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A9A7A0;
+}
