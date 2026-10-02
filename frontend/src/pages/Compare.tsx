@@ -29,14 +29,14 @@ const mockVariants: Record<string, Variant> = {
 export const Compare: React.FC = () => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
-  
-  const [variants, setVariants] = useState<Partial<Record<'A'|'B'|'C', string>>>({});
+
+  const [variants, setVariants] = useState<Partial<Record<'A' | 'B' | 'C', string>>>({});
   const [isComparing, setIsComparing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
   const [independentMode, setIndependentMode] = useState(false);
   const [feedScale, setFeedScale] = useState<FeedScale>('desktop');
-  const [activeFeedVariant, setActiveFeedVariant] = useState<'A'|'B'|'C'>('A');
+  const [activeFeedVariant, setActiveFeedVariant] = useState<'A' | 'B' | 'C'>('A');
   const [showFeedHeatmap, setShowFeedHeatmap] = useState(false);
 
   useEffect(() => {
@@ -58,20 +58,20 @@ export const Compare: React.FC = () => {
   // Set up ScrollTriggers for comparison results when they appear
   useEffect(() => {
     if (!isComparing) return;
-    
+
     const ctx = gsap.context(() => {
       // BATTLE SECTION
-      gsap.fromTo('.battle-card:nth-child(1)', 
-        { opacity: 0, x: -50 }, 
+      gsap.fromTo('.battle-card:nth-child(1)',
+        { opacity: 0, x: -50 },
         { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 }
       );
-      gsap.fromTo('.battle-card:nth-child(2)', 
-        { opacity: 0, x: 50 }, 
+      gsap.fromTo('.battle-card:nth-child(2)',
+        { opacity: 0, x: 50 },
         { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out', delay: 0.3 }
       );
       if (variants.C) {
-         gsap.fromTo('.battle-card:nth-child(3)', 
-          { opacity: 0, y: 50 }, 
+        gsap.fromTo('.battle-card:nth-child(3)',
+          { opacity: 0, y: 50 },
           { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.4 }
         );
       }
@@ -81,8 +81,8 @@ export const Compare: React.FC = () => {
         trigger: '.comparison-chart',
         start: 'top 85%',
         onEnter: () => {
-          gsap.fromTo('.comparison-bar', 
-            { width: '0%' }, 
+          gsap.fromTo('.comparison-bar',
+            { width: '0%' },
             { width: (i, target) => target.dataset.width, duration: 1.2, ease: 'power3.out', stagger: 0.05 }
           );
         },
@@ -108,8 +108,8 @@ export const Compare: React.FC = () => {
         start: 'top 75%',
         onEnter: () => {
           gsap.fromTo('.feed-frame', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
-          gsap.fromTo('.feed-item', 
-            { opacity: 0, x: -20 }, 
+          gsap.fromTo('.feed-item',
+            { opacity: 0, x: -20 },
             { opacity: 1, x: 0, duration: 0.5, stagger: 0.1, delay: 0.4, ease: 'power2.out' }
           );
         },
@@ -121,8 +121,8 @@ export const Compare: React.FC = () => {
         trigger: '.feed-metrics',
         start: 'top 85%',
         onEnter: () => {
-          gsap.fromTo('.feed-metric', 
-            { opacity: 0, scale: 0.95 }, 
+          gsap.fromTo('.feed-metric',
+            { opacity: 0, scale: 0.95 },
             { opacity: 1, scale: 1, duration: 0.6, stagger: 0.1, ease: 'back.out(1.2)' }
           );
         },
@@ -134,12 +134,12 @@ export const Compare: React.FC = () => {
     return () => ctx.revert();
   }, [isComparing, variants.C]);
 
-  const handleUpload = (id: 'A'|'B'|'C') => {
+  const handleUpload = (id: 'A' | 'B' | 'C') => {
     // Mock upload
     setVariants(prev => ({ ...prev, [id]: mockVariants[id].image }));
   };
 
-  const removeVariant = (id: 'A'|'B'|'C', e: React.MouseEvent) => {
+  const removeVariant = (id: 'A' | 'B' | 'C', e: React.MouseEvent) => {
     e.stopPropagation();
     setVariants(prev => {
       const newVars = { ...prev };
@@ -150,9 +150,9 @@ export const Compare: React.FC = () => {
 
   const startComparison = () => {
     if (!variants.A || !variants.B) return;
-    
+
     setIsAnalyzing(true);
-    
+
     // Fake analysis delay
     setTimeout(() => {
       const tl = gsap.timeline({
@@ -167,13 +167,13 @@ export const Compare: React.FC = () => {
   };
 
   const canCompare = variants.A && variants.B;
-  const activeKeys = Object.keys(variants).sort() as ('A'|'B'|'C')[];
+  const activeKeys = Object.keys(variants).sort() as ('A' | 'B' | 'C')[];
 
-  const renderUploadSlot = (id: 'A'|'B'|'C', title: string, isOptional: boolean = false) => {
+  const renderUploadSlot = (id: 'A' | 'B' | 'C', title: string, isOptional: boolean = false) => {
     const hasImage = !!variants[id];
-    
+
     return (
-      <div 
+      <div
         className={`upload-slot relative aspect-video border-2 ${hasImage ? 'border-[#8B5CF6] border-solid' : 'border-dashed border-[#E6E4DE] hover:border-[#D5D3CC]'} rounded-3xl transition-all duration-300 flex flex-col items-center justify-center overflow-hidden bg-white group cursor-pointer`}
         onClick={() => !hasImage && handleUpload(id)}
       >
@@ -206,7 +206,7 @@ export const Compare: React.FC = () => {
     );
   };
 
-  const renderVariantAnalysis = (id: 'A'|'B'|'C') => {
+  const renderVariantAnalysis = (id: 'A' | 'B' | 'C') => {
     const data = mockVariants[id];
     if (!data || !variants[id]) return null;
 
@@ -219,21 +219,21 @@ export const Compare: React.FC = () => {
             <span className="text-xl font-black text-[#8B5CF6]">{data.score}</span>
           </div>
         </div>
-        
+
         <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center mb-6">
-          <img src={data.image} alt={`Variant ${id}`} className={`battle-thumbnail w-full h-full object-cover ${id==='B' ? 'grayscale' : ''} ${id==='C' ? 'sepia' : ''}`} />
-          
+          <img src={data.image} alt={`Variant ${id}`} className={`battle-thumbnail w-full h-full object-cover ${id === 'B' ? 'grayscale' : ''} ${id === 'C' ? 'sepia' : ''}`} />
+
           {/* Heatmap Overlay */}
           {viewMode === 'heatmap' && (
-            <div className="battle-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: `radial-gradient(circle at ${id==='A' ? '40% 30%' : id==='B' ? '50% 20%' : '30% 40%'}, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at ${id==='A' ? '70% 50%' : id==='B' ? '60% 60%' : '80% 40%'}, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)` }}></div>
+            <div className="battle-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: `radial-gradient(circle at ${id === 'A' ? '40% 30%' : id === 'B' ? '50% 20%' : '30% 40%'}, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at ${id === 'A' ? '70% 50%' : id === 'B' ? '60% 60%' : '80% 40%'}, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)` }}></div>
           )}
 
           {/* Scan Path Overlay */}
           {viewMode === 'scan' && (
             <div className="battle-scan-path absolute inset-0">
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id==='A' ? 'top-[30%] left-[40%]' : id==='B' ? 'top-[20%] left-[50%]' : 'top-[40%] left-[30%]'}`}>1</div>
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id==='A' ? 'top-[50%] left-[70%]' : id==='B' ? 'top-[60%] left-[60%]' : 'top-[40%] left-[80%]'}`}>2</div>
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id==='A' ? 'top-[70%] left-[20%]' : id==='B' ? 'top-[80%] left-[30%]' : 'top-[70%] left-[20%]'}`}>3</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[30%] left-[40%]' : id === 'B' ? 'top-[20%] left-[50%]' : 'top-[40%] left-[30%]'}`}>1</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[50%] left-[70%]' : id === 'B' ? 'top-[60%] left-[60%]' : 'top-[40%] left-[80%]'}`}>2</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[70%] left-[20%]' : id === 'B' ? 'top-[80%] left-[30%]' : 'top-[70%] left-[20%]'}`}>3</div>
               <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
                 {id === 'A' ? (
                   <>
@@ -273,17 +273,14 @@ export const Compare: React.FC = () => {
   return (
     <div ref={pageRef} className="compare-page min-h-screen bg-[#FAF9F5] text-[#121214] font-sans selection:bg-purple-100 selection:text-purple-900 pb-24 overflow-x-hidden">
       <AppNavbar />
-      
+
       {!isComparing ? (
         <main className="upload-section pt-32 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto min-h-[80vh] flex flex-col">
-          
+
           <div className="compare-header text-center max-w-3xl mx-auto mb-16">
             <h1 className="compare-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
               Which design captures attention better?
             </h1>
-            <p className="compare-subtitle text-lg text-[#4A4950] mb-8">
-              Compare thumbnail variants side by side, understand how their visual hierarchy changes, and see how they perform at realistic feed size.
-            </p>
           </div>
 
           <div className="upload-grid grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto w-full mb-12">
@@ -301,7 +298,7 @@ export const Compare: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <button 
+              <button
                 disabled={!canCompare}
                 onClick={startComparison}
                 className={`compare-button inline-flex items-center gap-2 px-8 py-4 text-base font-bold rounded-2xl transition-all duration-300 shadow-lg ${canCompare ? 'bg-[#121214] hover:bg-[#25252A] text-white hover:scale-105' : 'bg-[#E6E4DE] text-[#8F8D98] cursor-not-allowed'}`}
@@ -314,11 +311,11 @@ export const Compare: React.FC = () => {
               <p className="mt-4 text-sm font-medium text-[#8F8D98]">Upload at least two variants to begin comparison.</p>
             )}
           </div>
-          
+
         </main>
       ) : (
         <main className="comparison-results pt-28 px-6 sm:px-8 lg:px-12 max-w-[1600px] mx-auto">
-          
+
           {/* A/B BATTLE HERO */}
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl font-bold tracking-tight text-[#121214] mb-4">A/B Thumbnail Battle</h2>
@@ -338,7 +335,7 @@ export const Compare: React.FC = () => {
           {/* DISTRIBUTION COMPARISON */}
           <div className="comparison-chart bg-white border border-[#E6E4DE] rounded-3xl p-8 lg:p-12 shadow-sm max-w-5xl mx-auto mb-20">
             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-10 text-center">Estimated Attention Distribution</h3>
-            
+
             <div className="space-y-6">
               {/* Header */}
               <div className="flex items-center text-xs font-bold text-[#8F8D98] uppercase tracking-wider mb-2">
@@ -347,7 +344,7 @@ export const Compare: React.FC = () => {
                   {activeKeys.map(k => <div key={k} className="text-center">Variant {k}</div>)}
                 </div>
               </div>
-              
+
               {/* Rows */}
               {[
                 { label: 'Face', keys: ['face'] },
@@ -364,7 +361,7 @@ export const Compare: React.FC = () => {
                         <div key={k} className="flex flex-col gap-1">
                           <span className="text-xs font-bold text-right text-[#4A4950]">{val}%</span>
                           <div className="h-1.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden flex justify-end">
-                            <div className={`comparison-bar h-full rounded-full ${j===0 ? 'bg-[#8B5CF6]' : j===1 ? 'bg-[#121214]' : 'bg-[#8F8D98]'}`} data-width={`${val}%`} style={{ width: '0%' }}></div>
+                            <div className={`comparison-bar h-full rounded-full ${j === 0 ? 'bg-[#8B5CF6]' : j === 1 ? 'bg-[#121214]' : 'bg-[#8F8D98]'}`} data-width={`${val}%`} style={{ width: '0%' }}></div>
                           </div>
                         </div>
                       );
@@ -414,18 +411,18 @@ export const Compare: React.FC = () => {
           {/* FEED SIMULATOR */}
           <div className="feed-section max-w-[1400px] mx-auto mb-32 bg-[#121214] text-white rounded-[40px] p-8 lg:p-16 shadow-2xl relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-            
+
             <div className="relative z-10 flex flex-col lg:flex-row gap-12">
               <div className="flex-1 lg:max-w-sm">
                 <h2 className="text-4xl font-bold tracking-tight mb-4">Now put them in the feed.</h2>
                 <p className="text-gray-400 font-medium text-lg mb-8">See how your thumbnails behave when reduced to the scale viewers actually encounter while browsing.</p>
-                
+
                 <div className="space-y-6">
                   <div>
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-3">Select Active Variant</span>
                     <div className="flex gap-2 bg-gray-900 p-1 rounded-xl border border-gray-800 w-fit">
                       {activeKeys.map(k => (
-                        <button 
+                        <button
                           key={k}
                           onClick={() => setActiveFeedVariant(k)}
                           className={`px-6 py-2 text-sm font-bold rounded-lg transition-colors ${activeFeedVariant === k ? 'bg-[#8B5CF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
@@ -468,7 +465,7 @@ export const Compare: React.FC = () => {
               {/* SIMULATED FEED */}
               <div className="flex-1 flex justify-center bg-black/40 rounded-3xl border border-gray-800 p-8 overflow-hidden h-[600px] feed-frame">
                 <div className={`flex flex-col gap-6 w-full max-w-full overflow-y-auto pr-2 custom-scrollbar transition-all duration-500 ${feedScale === 'mobile' ? 'max-w-[320px]' : 'max-w-[480px]'}`}>
-                  
+
                   {/* Competitor 1 */}
                   <div className="feed-item flex flex-col gap-3">
                     <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden">
@@ -488,13 +485,13 @@ export const Compare: React.FC = () => {
                   <div className="feed-item feed-target flex flex-col gap-3 relative">
                     <div className="absolute -inset-4 bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 rounded-2xl -z-10 animate-pulse"></div>
                     <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden shadow-2xl shadow-purple-900/20">
-                      <img src={mockVariants[activeFeedVariant].image} alt="Your Variant" className={`w-full h-full object-cover transition-all duration-500 ${activeFeedVariant==='B' ? 'grayscale' : ''} ${activeFeedVariant==='C' ? 'sepia' : ''}`} />
+                      <img src={mockVariants[activeFeedVariant].image} alt="Your Variant" className={`w-full h-full object-cover transition-all duration-500 ${activeFeedVariant === 'B' ? 'grayscale' : ''} ${activeFeedVariant === 'C' ? 'sepia' : ''}`} />
                       <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">8:42</span>
-                      
+
                       {showFeedHeatmap && (
-                        <div className="absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-300" style={{ backgroundImage: `radial-gradient(circle at ${activeFeedVariant==='A' ? '40% 30%' : '50% 50%'}, rgba(239,68,68,0.7) 0%, rgba(249,115,22,0.5) 20%, transparent 60%)` }}></div>
+                        <div className="absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-300" style={{ backgroundImage: `radial-gradient(circle at ${activeFeedVariant === 'A' ? '40% 30%' : '50% 50%'}, rgba(239,68,68,0.7) 0%, rgba(249,115,22,0.5) 20%, transparent 60%)` }}></div>
                       )}
-                      
+
                       <div className="absolute top-2 left-2 bg-[#8B5CF6] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase shadow-sm">Your Thumbnail {activeFeedVariant}</div>
                     </div>
                     <div className="flex gap-3">
@@ -524,22 +521,22 @@ export const Compare: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Feed Metrics below */}
             <div className="feed-metrics mt-12 pt-8 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-               {[{l:'Text Readability', v:'84%'}, {l:'Subject Visibility', v:'91%'}, {l:'Face Prominence', v:'78%'}, {l:'Contrast', v:'88%'}, {l:'Distinctiveness', v:'81%'}].map((m, i) => (
-                 <div key={m.l} className="feed-metric bg-gray-900 rounded-xl p-4 border border-gray-800">
-                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 line-clamp-1">{m.l}</div>
-                   <div className={`text-xl font-black ${i===0||i===1 ? 'text-green-400' : 'text-white'}`}>{m.v}</div>
-                 </div>
-               ))}
+              {[{ l: 'Text Readability', v: '84%' }, { l: 'Subject Visibility', v: '91%' }, { l: 'Face Prominence', v: '78%' }, { l: 'Contrast', v: '88%' }, { l: 'Distinctiveness', v: '81%' }].map((m, i) => (
+                <div key={m.l} className="feed-metric bg-gray-900 rounded-xl p-4 border border-gray-800">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 line-clamp-1">{m.l}</div>
+                  <div className={`text-xl font-black ${i === 0 || i === 1 ? 'text-green-400' : 'text-white'}`}>{m.v}</div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* SUMMARY */}
           <div className="comparison-summary max-w-4xl mx-auto mb-32 bg-white border border-[#E6E4DE] rounded-3xl p-8 lg:p-12 shadow-sm text-center">
             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-8">Comparison Summary</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <div className="p-6 bg-[#FAF9F5] rounded-2xl border border-[#E6E4DE]">
                 <span className="block text-xs font-bold text-[#8F8D98] uppercase tracking-wider mb-2">Highest Attention Concentration</span>

@@ -148,23 +148,6 @@ export const AttentionBudget: React.FC = () => {
           <h1 className="attention-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
             Where is your thumbnail spending attention?
           </h1>
-          <p className="attention-subtitle text-lg text-[#4A4950] mb-8">
-            Understand how visual attention is distributed across faces, text, subjects, background elements, and other visual cues.
-          </p>
-          <div className="attention-cta flex items-center justify-center gap-4">
-            <button 
-              onClick={() => navigate('/analyze')}
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#121214] hover:bg-[#25252A] rounded-xl transition-colors shadow-sm"
-            >
-              Analyze a Thumbnail
-            </button>
-            <button 
-              onClick={() => navigate('/compare')}
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-[#121214] bg-white border border-[#E6E4DE] hover:bg-[#FAF9F5] rounded-xl transition-colors shadow-sm"
-            >
-              Compare Thumbnails
-            </button>
-          </div>
         </div>
 
         {/* MAIN THUMBNAIL ANALYSIS AREA */}

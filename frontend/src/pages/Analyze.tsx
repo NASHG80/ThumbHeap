@@ -192,9 +192,6 @@ export const Analyze: React.FC = () => {
           <h1 className="analyze-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
             See what viewers see first.
           </h1>
-          <p className="analyze-subtitle text-lg text-[#4A4950]">
-            Upload a YouTube thumbnail and let ATTNLY analyze visual attention, hierarchy, faces, text, subjects, contrast, and composition.
-          </p>
         </div>
 
         {/* Empty State */}

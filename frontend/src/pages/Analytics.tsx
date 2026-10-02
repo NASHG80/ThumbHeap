@@ -70,28 +70,28 @@ export const Analytics: React.FC = () => {
       gsap.fromTo('.analytics-header', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.1, ease: 'power3.out' });
       gsap.fromTo('.analytics-title', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
       gsap.fromTo('.analytics-subtitle', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.3, ease: 'power3.out' });
-      
+
       // KPIs
-      gsap.fromTo('.analytics-kpi', 
-        { opacity: 0, y: 20 }, 
+      gsap.fromTo('.analytics-kpi',
+        { opacity: 0, y: 20 },
         { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.4, ease: 'power3.out' }
       );
-      
+
       // Animate KPI values
       const kpiValues = document.querySelectorAll('.analytics-kpi-value-animate');
       kpiValues.forEach(el => {
         const endVal = parseFloat(el.getAttribute('data-value') || '0');
-        gsap.fromTo(el, 
-          { innerHTML: 0 }, 
-          { 
-            innerHTML: endVal, 
-            duration: 1.5, 
+        gsap.fromTo(el,
+          { innerHTML: 0 },
+          {
+            innerHTML: endVal,
+            duration: 1.5,
             delay: 0.6,
             ease: 'power2.out',
             snap: { innerHTML: endVal % 1 === 0 ? 1 : 0.1 },
-            onUpdate: function() {
+            onUpdate: function () {
               if (endVal % 1 !== 0) {
-                 el.innerHTML = Number(this.targets()[0].innerHTML).toFixed(1);
+                el.innerHTML = Number(this.targets()[0].innerHTML).toFixed(1);
               }
             }
           }
@@ -104,12 +104,12 @@ export const Analytics: React.FC = () => {
         start: 'top 85%',
         onEnter: () => {
           gsap.fromTo('.performance-chart-container', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
-          gsap.fromTo('.chart-line path', 
-            { strokeDasharray: 1000, strokeDashoffset: 1000 }, 
+          gsap.fromTo('.chart-line path',
+            { strokeDasharray: 1000, strokeDashoffset: 1000 },
             { strokeDashoffset: 0, duration: 2, ease: 'power2.out', delay: 0.4 }
           );
-          gsap.fromTo('.chart-point', 
-            { opacity: 0, scale: 0 }, 
+          gsap.fromTo('.chart-point',
+            { opacity: 0, scale: 0 },
             { opacity: 1, scale: 1, duration: 0.4, stagger: 0.1, delay: 1, ease: 'back.out(1.5)' }
           );
         },
@@ -122,8 +122,8 @@ export const Analytics: React.FC = () => {
         start: 'top 85%',
         onEnter: () => {
           gsap.fromTo('.attention-performance-container', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
-          gsap.fromTo('.scatter-point', 
-            { opacity: 0, scale: 0 }, 
+          gsap.fromTo('.scatter-point',
+            { opacity: 0, scale: 0 },
             { opacity: 1, scale: 1, duration: 0.6, stagger: 0.05, delay: 0.3, ease: 'back.out(1.2)' }
           );
         },
@@ -135,8 +135,8 @@ export const Analytics: React.FC = () => {
         trigger: '.video-list',
         start: 'top 85%',
         onEnter: () => {
-          gsap.fromTo('.video-row', 
-            { opacity: 0, y: 20 }, 
+          gsap.fromTo('.video-row',
+            { opacity: 0, y: 20 },
             { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
           );
         },
@@ -148,8 +148,8 @@ export const Analytics: React.FC = () => {
         trigger: '.pattern-section',
         start: 'top 85%',
         onEnter: () => {
-          gsap.fromTo('.pattern-item', 
-            { opacity: 0, x: -20 }, 
+          gsap.fromTo('.pattern-item',
+            { opacity: 0, x: -20 },
             { opacity: 1, x: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
           );
           gsap.fromTo('.pattern-bar-fill',
@@ -165,7 +165,7 @@ export const Analytics: React.FC = () => {
       bottomSections.forEach(selector => {
         gsap.fromTo(selector,
           { opacity: 0, y: 30 },
-          { 
+          {
             opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
             scrollTrigger: {
               trigger: selector,
@@ -178,7 +178,7 @@ export const Analytics: React.FC = () => {
 
       gsap.fromTo('.insight-item',
         { opacity: 0, x: -20 },
-        { 
+        {
           opacity: 1, x: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out',
           scrollTrigger: { trigger: '.insights-section', start: 'top 80%', once: true }
         }
@@ -186,7 +186,7 @@ export const Analytics: React.FC = () => {
 
       gsap.fromTo('.recommendation-item',
         { opacity: 0, y: 15 },
-        { 
+        {
           opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out',
           scrollTrigger: { trigger: '.recommendations-section', start: 'top 80%', once: true }
         }
@@ -207,50 +207,16 @@ export const Analytics: React.FC = () => {
   return (
     <div ref={pageRef} className="analytics-page min-h-screen bg-[#FAF9F5] text-[#121214] font-sans selection:bg-purple-100 selection:text-purple-900 pb-24 overflow-x-hidden">
       <AppNavbar />
-      
+
       <main className="pt-24 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
-        
-        {/* RECLAIM VERIFIED DATA LAYER */}
-        <div className="verified-layer flex justify-center mb-10">
-          <div className="inline-flex items-center gap-4 bg-white border border-[#E6E4DE] px-4 py-2 rounded-full shadow-sm text-xs font-bold text-[#4A4950]">
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-green-500" /> Data source verified</span>
-            <span className="w-1 h-1 rounded-full bg-[#E6E4DE]"></span>
-            <span className="flex items-center gap-1.5"><Activity className="w-4 h-4 text-[#8B5CF6]" /> Claims verified</span>
-            <span className="w-1 h-1 rounded-full bg-[#E6E4DE]"></span>
-            <span className="text-[#8F8D98]">Latest sync: Today</span>
-            <div className="reclaim-badge ml-2 pl-3 border-l border-[#E6E4DE] flex items-center gap-1 text-[#121214]">
-              <div className="w-4 h-4 bg-[#121214] rounded flex items-center justify-center"><ShieldCheck className="w-2.5 h-2.5 text-white" /></div>
-              Verified by Reclaim
-            </div>
-          </div>
-        </div>
+
 
         {/* PAGE HERO */}
-        <div className="analytics-header text-center max-w-3xl mx-auto mb-16">
-          <h1 className="analytics-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
-            Turn thumbnail patterns into better decisions.
-          </h1>
-          <p className="analytics-subtitle text-lg text-[#4A4950] mb-8">
-            Compare your thumbnail designs with historical video performance and discover which visual patterns appear most often in your strongest-performing content.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#121214] hover:bg-[#25252A] rounded-xl transition-colors shadow-sm">
-              Analyze New Thumbnail
-            </button>
-            <button onClick={() => navigate('/compare')} className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-[#121214] bg-white border border-[#E6E4DE] hover:bg-[#FAF9F5] rounded-xl transition-colors shadow-sm">
-              Compare Thumbnails
-            </button>
-          </div>
-          <div className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#8F8D98] uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span> Analytics synced
-          </div>
-        </div>
-
         {/* TIME RANGE FILTER */}
         <div className="flex justify-end mb-6">
           <div className="flex gap-1 bg-white p-1 rounded-xl border border-[#E6E4DE] shadow-sm">
             {(['7D', '30D', '90D', 'All Time'] as const).map(range => (
-              <button 
+              <button
                 key={range}
                 onClick={() => setTimeRange(range)}
                 className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${timeRange === range ? 'bg-[#121214] text-white' : 'text-[#4A4950] hover:bg-[#FAF9F5] hover:text-[#121214]'}`}
@@ -309,7 +275,7 @@ export const Analytics: React.FC = () => {
             </div>
             <div className="flex gap-2 bg-[#FAF9F5] p-1 rounded-xl border border-[#E6E4DE] w-fit">
               {(['CTR', 'Views', 'Impressions'] as const).map(metric => (
-                <button 
+                <button
                   key={metric}
                   onClick={() => setActiveChartMetric(metric)}
                   className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeChartMetric === metric ? 'bg-white text-[#121214] shadow-sm border border-[#E6E4DE]' : 'text-[#8F8D98] hover:text-[#121214]'}`}
@@ -319,7 +285,7 @@ export const Analytics: React.FC = () => {
               ))}
             </div>
           </div>
-          
+
           <div className="relative h-64 w-full flex items-end">
             {/* Y Axis lines */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6 pt-2">
@@ -330,7 +296,7 @@ export const Analytics: React.FC = () => {
                 </div>
               ))}
             </div>
-            
+
             {/* SVG Line Chart Mock */}
             <svg className="absolute inset-0 w-full h-full pl-8 pb-6 pt-2 overflow-visible" preserveAspectRatio="none">
               <path className="chart-line" d="M 0 200 Q 100 150 200 180 T 400 100 T 600 120 T 800 40 T 1000 60" fill="none" stroke="#8B5CF6" strokeWidth="3" strokeLinecap="round" />
@@ -342,7 +308,7 @@ export const Analytics: React.FC = () => {
               <circle className="chart-point" cx="800" cy="40" r="4" fill="white" stroke="#8B5CF6" strokeWidth="2" />
               <circle className="chart-point" cx="1000" cy="60" r="4" fill="white" stroke="#8B5CF6" strokeWidth="2" />
             </svg>
-            
+
             {/* X Axis labels */}
             <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[10px] font-bold text-[#8F8D98]">
               <span>Sep 1</span>
@@ -361,39 +327,39 @@ export const Analytics: React.FC = () => {
             <h3 className="text-xl font-bold tracking-tight text-[#121214] mb-1 flex items-center gap-2"><Target className="w-5 h-5 text-[#8B5CF6]" /> Attention vs Performance</h3>
             <p className="text-sm font-medium text-[#4A4950]">Compare predicted thumbnail attention with historical video performance to identify recurring visual patterns.</p>
           </div>
-          
+
           <div className="relative h-80 w-full bg-[#FAF9F5] rounded-2xl border border-[#E6E4DE] p-8">
-             <div className="absolute top-4 left-4 text-xs font-bold text-[#8F8D98] uppercase tracking-wider rotate-[-90deg] origin-top-left translate-y-20">CTR (%)</div>
-             <div className="absolute bottom-4 right-8 text-xs font-bold text-[#8F8D98] uppercase tracking-wider">Predicted Attention Concentration (%)</div>
-             
-             {/* Scatter Grid */}
-             <div className="absolute inset-8 border-l border-b border-[#D5D3CC]"></div>
-             
-             {/* Scatter Points (Mocks) */}
-             {[
-               {x: 81, y: 8.4, type: 'Face'}, {x: 64, y: 5.1, type: 'Title'}, {x: 76, y: 7.2, type: 'Subject'}, {x: 58, y: 4.8, type: 'Background'}, {x: 85, y: 9.1, type: 'Face'},
-               {x: 72, y: 6.8, type: 'Subject'}, {x: 88, y: 8.9, type: 'Face'}, {x: 69, y: 5.5, type: 'Title'}, {x: 79, y: 7.5, type: 'Face'}, {x: 61, y: 4.2, type: 'Background'}
-             ].map((pt, i) => (
-               <div 
-                  key={i} 
-                  className={`scatter-point absolute w-4 h-4 rounded-full -translate-x-1/2 translate-y-1/2 cursor-pointer transition-transform hover:scale-150 group z-10
+            <div className="absolute top-4 left-4 text-xs font-bold text-[#8F8D98] uppercase tracking-wider rotate-[-90deg] origin-top-left translate-y-20">CTR (%)</div>
+            <div className="absolute bottom-4 right-8 text-xs font-bold text-[#8F8D98] uppercase tracking-wider">Predicted Attention Concentration (%)</div>
+
+            {/* Scatter Grid */}
+            <div className="absolute inset-8 border-l border-b border-[#D5D3CC]"></div>
+
+            {/* Scatter Points (Mocks) */}
+            {[
+              { x: 81, y: 8.4, type: 'Face' }, { x: 64, y: 5.1, type: 'Title' }, { x: 76, y: 7.2, type: 'Subject' }, { x: 58, y: 4.8, type: 'Background' }, { x: 85, y: 9.1, type: 'Face' },
+              { x: 72, y: 6.8, type: 'Subject' }, { x: 88, y: 8.9, type: 'Face' }, { x: 69, y: 5.5, type: 'Title' }, { x: 79, y: 7.5, type: 'Face' }, { x: 61, y: 4.2, type: 'Background' }
+            ].map((pt, i) => (
+              <div
+                key={i}
+                className={`scatter-point absolute w-4 h-4 rounded-full -translate-x-1/2 translate-y-1/2 cursor-pointer transition-transform hover:scale-150 group z-10
                     ${pt.type === 'Face' ? 'bg-[#8B5CF6] border-2 border-white' : pt.type === 'Title' ? 'bg-[#121214] border-2 border-white' : pt.type === 'Subject' ? 'bg-orange-500 border-2 border-white' : 'bg-gray-400 border-2 border-white'}`}
-                  style={{ left: `${(pt.x - 50) * 2}%`, bottom: `${(pt.y - 3) * 15}%` }}
-               >
-                 <div className="scatter-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-[#121214] text-white text-xs font-medium rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none shadow-xl z-50">
-                    <div className="font-bold mb-1 truncate">Video {i+1}</div>
-                    <div className="text-gray-400">CTR: <span className="text-white font-bold">{pt.y}%</span></div>
-                    <div className="text-gray-400">Attention: <span className="text-white font-bold">{pt.x}%</span></div>
-                    <div className="text-gray-400">Anchor: <span className="text-white font-bold">{pt.type}</span></div>
-                 </div>
-               </div>
-             ))}
+                style={{ left: `${(pt.x - 50) * 2}%`, bottom: `${(pt.y - 3) * 15}%` }}
+              >
+                <div className="scatter-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-[#121214] text-white text-xs font-medium rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none shadow-xl z-50">
+                  <div className="font-bold mb-1 truncate">Video {i + 1}</div>
+                  <div className="text-gray-400">CTR: <span className="text-white font-bold">{pt.y}%</span></div>
+                  <div className="text-gray-400">Attention: <span className="text-white font-bold">{pt.x}%</span></div>
+                  <div className="text-gray-400">Anchor: <span className="text-white font-bold">{pt.type}</span></div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* TWO COLUMN: VIDEO LIST & PATTERNS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          
+
           {/* VIDEO PERFORMANCE TABLE */}
           <div className="lg:col-span-2 video-list bg-white border border-[#E6E4DE] rounded-3xl p-6 lg:p-8 shadow-sm">
             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-6">Analyzed Videos</h3>
@@ -410,8 +376,8 @@ export const Analytics: React.FC = () => {
                 </thead>
                 <tbody>
                   {mockVideos.map(video => (
-                    <tr 
-                      key={video.id} 
+                    <tr
+                      key={video.id}
                       className="video-row border-b border-[#E6E4DE]/50 hover:bg-[#FAF9F5] transition-colors cursor-pointer group"
                       onClick={() => setSelectedVideo(video)}
                     >
@@ -441,7 +407,7 @@ export const Analytics: React.FC = () => {
           <div className="lg:col-span-1 pattern-section bg-white border border-[#E6E4DE] rounded-3xl p-6 lg:p-8 shadow-sm">
             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-2">Pattern Analysis</h3>
             <p className="text-xs font-medium text-[#8F8D98] mb-6">Historical association in demo dataset.</p>
-            
+
             <div className="space-y-5">
               {mockPatterns.map(pattern => (
                 <div key={pattern.name} className="pattern-item group">
@@ -461,7 +427,7 @@ export const Analytics: React.FC = () => {
 
         {/* AI INSIGHTS & RECOMMENDATIONS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          
+
           <div className="insights-section bg-white border border-[#E6E4DE] rounded-3xl p-8 shadow-sm">
             <h3 className="text-xl font-bold tracking-tight text-[#121214] mb-6 flex items-center gap-2"><Brain className="w-5 h-5 text-[#8B5CF6]" /> AI Insights</h3>
             <div className="space-y-4">
@@ -481,7 +447,7 @@ export const Analytics: React.FC = () => {
               {mockRecommendations.map((rec, i) => (
                 <div key={i} className="recommendation-item flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-yellow-50 border border-yellow-200 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[10px] font-black text-yellow-600">{i+1}</span>
+                    <span className="text-[10px] font-black text-yellow-600">{i + 1}</span>
                   </div>
                   <p className="text-sm font-medium text-[#121214]">{rec}</p>
                 </div>
@@ -496,11 +462,11 @@ export const Analytics: React.FC = () => {
         {/* TOP PERFORMING PATTERNS */}
         <div className="top-patterns-section bg-[#121214] rounded-3xl p-8 lg:p-12 mb-12 shadow-2xl relative overflow-hidden text-white">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
-          
+
           <div className="relative z-10">
             <h3 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2"><Sparkles className="w-6 h-6 text-[#8B5CF6]" /> Patterns in your strongest videos</h3>
             <p className="text-sm font-medium text-gray-400 mb-8">Observed historical performance across your highest CTR uploads.</p>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {['Face-led', 'Title-led', 'Subject-led', 'Minimalist'].map((pattern, i) => (
                 <div key={pattern} className="bg-white/10 border border-white/10 rounded-2xl p-4 hover:bg-white/20 transition-colors cursor-pointer">
@@ -562,8 +528,8 @@ export const Analytics: React.FC = () => {
               <button onClick={() => setSelectedVideo(null)} className="p-2 hover:bg-[#FAF9F5] rounded-full transition-colors"><X className="w-5 h-5 text-[#8F8D98]" /></button>
             </div>
             <div className="aspect-video bg-gray-900 rounded-2xl overflow-hidden mb-6 relative">
-               <img src={selectedVideo.thumbnail} alt={selectedVideo.title} className="w-full h-full object-cover opacity-90" />
-               <div className="absolute top-4 left-4 bg-black/80 px-2 py-1 rounded text-white text-xs font-bold uppercase tracking-wider">Analysis Snippet</div>
+              <img src={selectedVideo.thumbnail} alt={selectedVideo.title} className="w-full h-full object-cover opacity-90" />
+              <div className="absolute top-4 left-4 bg-black/80 px-2 py-1 rounded text-white text-xs font-bold uppercase tracking-wider">Analysis Snippet</div>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="bg-[#FAF9F5] p-4 rounded-xl border border-[#E6E4DE]">
