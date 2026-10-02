@@ -73,6 +73,18 @@ coverage/
 *.tmp
 *.temp
 
+# Person C local environment
+backend/person_c/.venv-c/
+
+# OSIE raw dataset
+backend/person_c/data/raw/osie/
+
+# Generated OSIE processed dataset
+backend/person_c/data/processed/osie/
+
+# Generated outputs
+backend/person_c/outputs/
+
 # Person B local environment
 backend/.venv-person-b/
 
