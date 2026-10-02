@@ -72,3 +72,20 @@ coverage/
 # =========================
 *.tmp
 *.temp
+
+# Person B local environment
+backend/.venv-person-b/
+
+# Local/generated data
+backend/outputs/
+backend/testimage/
+
+# Local model files
+backend/models/
+backend/weights/
+
+# Model and generated array files
+*.pt
+*.onnx
+*.pth
+*.npy
