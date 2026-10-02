@@ -4,6 +4,3 @@ pandas
 Pillow
 opencv-python
 matplotlib
-tqdm
-jupyter
-notebook
