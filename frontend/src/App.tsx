@@ -8,6 +8,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { Analyze } from './pages/Analyze';
+import { AttentionBudget } from './pages/AttentionBudget';
+import { Compare } from './pages/Compare';
+import { Analytics } from './pages/Analytics';
 
 export default function App() {
   return (
@@ -16,6 +20,10 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/analyze" element={<Analyze />} />
+        <Route path="/attention-budget" element={<AttentionBudget />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/analytics" element={<Analytics />} />
       </Routes>
     </Router>
   );
