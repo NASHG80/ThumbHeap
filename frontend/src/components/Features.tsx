@@ -101,35 +101,40 @@ export const Features: React.FC = () => {
         </div>
 
         {/* Card 2: A/B Thumbnail Battle (Light, top-right) */}
-        <div className="bento-card lg:col-span-5 relative bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 flex flex-col group p-10">
-          <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 text-black group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="12" y1="3" x2="12" y2="21" />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold text-black mb-3">A/B Thumbnail Battle</h3>
-          <p className="text-gray-500 text-[15px] leading-relaxed mb-8 max-w-[55%] xl:max-w-[60%] relative z-10">
-            Compare multiple thumbnail variations side by side and see which one is predicted to perform better.
-          </p>
-          <div className="mt-auto relative z-10">
+        <div className="bento-card lg:col-span-5 relative bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 flex flex-row group min-h-[280px]">
+
+          {/* Left: Text content */}
+          <div className="flex flex-col justify-between p-10 w-[52%] shrink-0 relative z-10">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 text-black group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="12" y1="3" x2="12" y2="21" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-black mb-3">A/B Thumbnail Battle</h3>
+              <p className="text-gray-500 text-[15px] leading-relaxed mb-6">
+                Compare multiple thumbnail variations side by side and see which one is predicted to perform better.
+              </p>
+            </div>
             <a href="#" className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-[#121214] hover:bg-black rounded-full transition-colors w-max gap-2 group-hover:gap-3">
               Explore <span>→</span>
             </a>
           </div>
 
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[55%] md:w-[45%] h-48 pointer-events-none perspective-[1000px]">
+          {/* Right: Stacked images centered */}
+          <div className="flex-1 relative">
             {/* Variant A (Back) */}
-            <div className="absolute top-0 right-4 w-56 aspect-video bg-white p-1 rounded-xl shadow-lg border border-gray-200 transform rotate-[-5deg] scale-90 opacity-60 group-hover:rotate-[-8deg] transition-transform duration-500">
+            <div className="absolute top-1/2 left-1/2 -translate-x-[60%] -translate-y-[65%] w-40 aspect-video bg-white p-1 rounded-xl shadow-lg border border-gray-200 rotate-[-5deg] opacity-60 group-hover:rotate-[-8deg] transition-transform duration-500">
               <img src="/images/astronaut_thumb.jpg" className="w-full h-full object-cover rounded-lg" />
               <div className="absolute -top-3 -left-3 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">A</div>
             </div>
             {/* Variant B (Front) */}
-            <div className="absolute bottom-4 right-12 w-56 aspect-video bg-white p-1 rounded-xl shadow-2xl border border-gray-200 transform rotate-[3deg] group-hover:rotate-[5deg] group-hover:translate-y-[-10px] transition-transform duration-500 z-10">
+            <div className="absolute top-1/2 left-1/2 -translate-x-[40%] -translate-y-[35%] w-40 aspect-video bg-white p-1 rounded-xl shadow-2xl border border-gray-200 rotate-[4deg] group-hover:rotate-[6deg] group-hover:-translate-y-[40%] transition-transform duration-500 z-10">
               <img src="/images/astronaut_thumb.jpg" className="w-full h-full object-cover rounded-lg" />
               <div className="absolute -top-3 -left-3 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">B</div>
               {/* Floating Stat Card */}
-              <div className="absolute -bottom-4 -right-4 bg-white border border-gray-100 rounded-xl p-3 shadow-xl flex flex-col items-center z-20">
+              <div className="absolute -bottom-3 -right-3 bg-white border border-gray-100 rounded-xl p-2.5 shadow-xl flex flex-col items-center z-20">
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-bold text-black">+24%</span>
                   <svg className="w-3 h-3 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12l7-7 7 7M12 19V5"/></svg>
@@ -138,7 +143,9 @@ export const Features: React.FC = () => {
               </div>
             </div>
           </div>
+
         </div>
+
 
         {/* Card 3: Attention Budget (Light, bottom-left) */}
         <div className="bento-card lg:col-span-4 relative bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 flex flex-col group p-10">
