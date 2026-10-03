@@ -10,24 +10,9 @@ export const Footer: React.FC = () => {
         {/* Brand Column (Left) */}
         <div className="md:col-span-5 space-y-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#121214] text-white flex items-center justify-center">
-              <svg
-                className="w-4.5 h-4.5 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-                <circle cx="12" cy="12" r="3" className="fill-[#8B5CF6] stroke-none" />
-                <line x1="12" y1="5" x2="12" y2="7" stroke="#8B5CF6" strokeWidth="1.5" />
-                <line x1="12" y1="17" x2="12" y2="19" stroke="#8B5CF6" strokeWidth="1.5" />
-              </svg>
-            </div>
+            <img src="/iris-logo.png" alt="Iris Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold tracking-tight text-[#121214]">
-              ATTNLY
+              Iris
             </span>
           </div>
 
@@ -99,7 +84,7 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@attnly.ai" className="hover:text-[#121214] transition-colors">
+                <a href="mailto:hello@iris.ai" className="hover:text-[#121214] transition-colors">
                   Contact
                 </a>
               </li>
@@ -141,7 +126,7 @@ export const Footer: React.FC = () => {
       {/* Bottom Sub-Footer Bar */}
       <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#71717A] font-mono">
         <div>
-          © {new Date().getFullYear()} ATTNLY Technologies Inc. All rights reserved.
+          © {new Date().getFullYear()} Iris Technologies Inc. All rights reserved.
         </div>
 
         <div className="flex items-center gap-6">

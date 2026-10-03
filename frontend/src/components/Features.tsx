@@ -467,12 +467,12 @@ export const Features: React.FC = () => {
                 </div>
               </div>
 
-              {/* Feed Item 2: ATTNLY Target (Highlighted with subtle indicator) */}
+              {/* Feed Item 2: Iris Target (Highlighted with subtle indicator) */}
               <div className="feed-item feed-target space-y-2 relative rounded-xl p-1 bg-white/5 border border-[#8B5CF6]">
                 <div className="feed-thumbnail aspect-video w-full rounded-lg overflow-hidden relative">
                   <ThumbnailVisual variant="hero" />
                   <div className="feed-metric absolute top-2 right-2 px-2 py-0.5 bg-[#8B5CF6] text-white text-[10px] font-mono font-bold rounded shadow-md">
-                    ATTNLY · #1 Focal Pick
+                    Iris · #1 Focal Pick
                   </div>
                 </div>
                 <div className="flex gap-2 px-1">

@@ -49,7 +49,7 @@ export const ThumbnailEditor: React.FC = () => {
               <span className="w-3 h-3 rounded-full bg-emerald-400" />
             </div>
             <span className="text-xs font-mono text-[#52525B] ml-2 hidden sm:inline">
-              ATTNLY Canvas — Project: "The 48-Hour Experiment" (1280 × 720)
+              Iris Canvas — Project: "The 48-Hour Experiment" (1280 × 720)
             </span>
           </div>
 

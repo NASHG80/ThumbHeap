@@ -69,7 +69,7 @@ export const About: React.FC = () => {
           data-animate="fade"
           className="about-description mt-6 text-lg sm:text-xl text-[#52525B] leading-relaxed max-w-3xl font-normal"
         >
-          ATTNLY replaces guesswork with neuro-computational vision science.
+          Iris replaces guesswork with neuro-computational vision science.
           By combining biological gaze models, cognitive text parsing, and creator performance correlations,
           we help you engineer thumbnail compositions that demand visual priority.
         </p>

@@ -27,30 +27,11 @@ export const Navbar: React.FC = () => {
           <a
             href="#hero"
             className="group flex items-center gap-2.5 text-[#121214] no-underline focus:outline-hidden"
-            aria-label="ATTNLY Home"
+            aria-label="Iris Home"
           >
-            {/* Minimal abstract eye/attention symbol */}
-            <div className="w-8 h-8 rounded-lg bg-[#121214] text-white flex items-center justify-center transition-transform group-hover:scale-105">
-              <svg
-                className="w-4.5 h-4.5 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {/* Outer eye contour */}
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-                {/* Violet focal iris pupil */}
-                <circle cx="12" cy="12" r="3" className="fill-[#8B5CF6] stroke-none" />
-                {/* Focus crosshairs */}
-                <line x1="12" y1="5" x2="12" y2="7" stroke="#8B5CF6" strokeWidth="1.5" />
-                <line x1="12" y1="17" x2="12" y2="19" stroke="#8B5CF6" strokeWidth="1.5" />
-              </svg>
-            </div>
+            <img src="/iris-logo.png" alt="Iris Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold tracking-tight text-[#121214]">
-              ATTNLY
+              Iris
             </span>
           </a>
         </div>
