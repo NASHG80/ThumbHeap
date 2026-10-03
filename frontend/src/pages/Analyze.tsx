@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
+import { useAuth } from '../context/AuthContext';
 import { Upload, Image as ImageIcon, X, RefreshCw, BarChart2, Eye, Layout, AlertCircle, ArrowRight, Activity, MousePointer2, UserSquare2, Type, TypeIcon, Image as ImagePlaceholder } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,6 +24,7 @@ export const Analyze: React.FC = () => {
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const navigate = useNavigate();
+  const { token, isAuthenticated } = useAuth();
 
   // Initial page load animation
   useEffect(() => {
@@ -58,10 +60,34 @@ export const Analyze: React.FC = () => {
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const url = URL.createObjectURL(file);
     setImagePreview(url);
     
+    // If authenticated, upload to Cloudinary via backend
+    if (isAuthenticated && token) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // We do this asynchronously so it doesn't block the UI transition
+        fetch('http://localhost:8000/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        }).then(res => res.json())
+          .then(data => {
+             console.log("Cloudinary Upload Success:", data.url);
+             // Optionally update imagePreview with Cloudinary URL
+             // setImagePreview(data.url);
+          }).catch(err => console.error("Cloudinary Upload Error:", err));
+      } catch (e) {
+        console.error("Upload failed", e);
+      }
+    }
+
     // Transition to uploaded state
     gsap.to('.upload-zone', {
       opacity: 0,
