@@ -12,6 +12,7 @@ import { Analyze } from './pages/Analyze';
 import { AttentionBudget } from './pages/AttentionBudget';
 import { Compare } from './pages/Compare';
 import { Analytics } from './pages/Analytics';
+import { CreatorProfile } from './pages/CreatorProfile';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/attention-budget" element={<Navigate replace to="/analyze" />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/profile" element={<CreatorProfile />} />
       </Routes>
     </Router>
   );

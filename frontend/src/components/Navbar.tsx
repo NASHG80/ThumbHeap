@@ -19,17 +19,18 @@ export const Navbar: React.FC = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
-        
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="2" y="10" width="4" height="12" rx="1" />
-            <rect x="10" y="4" width="4" height="18" rx="1" />
-            <rect x="18" y="14" width="4" height="8" rx="1" />
-          </svg>
-          <span className="text-xl font-extrabold tracking-tight text-black">
-            ThumbHeat
-          </span>
+        {/* Left: Brand Logo & Minimal Abstract Eye Mark */}
+        <div className="navbar-logo flex items-center gap-2.5">
+          <a
+            href="#hero"
+            className="group flex items-center gap-2.5 text-[#121214] no-underline focus:outline-hidden"
+            aria-label="Iris Home"
+          >
+            <img src="/iris-logo.png" alt="Iris Logo" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold tracking-tight text-[#121214]">
+              Iris
+            </span>
+          </a>
         </div>
 
         {/* Links */}

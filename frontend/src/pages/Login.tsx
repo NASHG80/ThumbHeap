@@ -47,15 +47,8 @@ export const Login: React.FC = () => {
     <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-4 selection:bg-purple-100 selection:text-purple-900 font-sans">
       <div className="absolute top-8 left-8">
         <Link to="/" className="flex items-center gap-2.5 text-[#121214] no-underline focus:outline-none group">
-          <div className="w-8 h-8 rounded-lg bg-[#121214] text-white flex items-center justify-center transition-transform group-hover:scale-105">
-            <svg className="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" className="fill-[#8B5CF6] stroke-none" />
-              <line x1="12" y1="5" x2="12" y2="7" stroke="#8B5CF6" strokeWidth="1.5" />
-              <line x1="12" y1="17" x2="12" y2="19" stroke="#8B5CF6" strokeWidth="1.5" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight">ATTNLY</span>
+          <img src="/iris-logo.png" alt="Iris Logo" className="w-8 h-8 object-contain" />
+          <span className="text-xl font-bold tracking-tight">Iris</span>
         </Link>
       </div>
 

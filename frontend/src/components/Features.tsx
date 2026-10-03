@@ -70,7 +70,30 @@ export const Features: React.FC = () => {
                     <span className="text-xl font-bold text-white">82%</span>
                     <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12l7-7 7 7M12 19V5"/></svg>
                   </div>
-                  <div className="text-[10px] text-gray-400">Focus on subject</div>
+                </div>
+              </div>
+
+              {/* Feed Item 2: Iris Target (Highlighted with subtle indicator) */}
+              <div className="feed-item feed-target space-y-2 relative rounded-xl p-1 bg-white/5 border border-[#8B5CF6]">
+                <div className="feed-thumbnail aspect-video w-full rounded-lg overflow-hidden relative">
+                  <div className="w-full h-full bg-[#1a1a2e] flex items-center justify-center text-white text-xs">Your Thumbnail</div>
+                  <div className="feed-metric absolute top-2 right-2 px-2 py-0.5 bg-[#8B5CF6] text-white text-[10px] font-mono font-bold rounded shadow-md">
+                    Iris · #1 Focal Pick
+                  </div>
+                </div>
+                <div className="flex gap-2 px-1">
+                  <div className="w-7 h-7 rounded-full bg-[#8B5CF6] shrink-0 flex items-center justify-center text-[10px] font-bold">A</div>
+                  <div className="text-xs">
+                    <p className="font-bold text-white line-clamp-1">THE 48-HOUR EXPERIMENT</p>
+                    <p className="text-[10px] text-violet-300">Your Channel · 14:22</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feed Item 3: Competitor 2 */}
+              <div className="feed-item space-y-2 opacity-60">
+                <div className="feed-thumbnail aspect-video w-full rounded-xl overflow-hidden">
+                  <div className="w-full h-full bg-[#222] flex items-center justify-center text-gray-400 text-[10px]">Focus on subject</div>
                 </div>
               </div>
             </div>

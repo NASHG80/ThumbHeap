@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, User, Accessibility } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -9,6 +9,7 @@ export const AppNavbar: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,27 +56,11 @@ export const AppNavbar: React.FC = () => {
             <Link
               to="/analyze"
               className="group flex items-center gap-2.5 text-[#121214] no-underline focus:outline-hidden"
-              aria-label="ATTNLY Home"
+              aria-label="Iris Home"
             >
-              {/* Minimal abstract eye/attention symbol */}
-              <div className="w-8 h-8 rounded-lg bg-[#121214] text-white flex items-center justify-center transition-transform group-hover:scale-105">
-                <svg
-                  className="w-4.5 h-4.5 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" className="fill-[#8B5CF6] stroke-none" />
-                  <line x1="12" y1="5" x2="12" y2="7" stroke="#8B5CF6" strokeWidth="1.5" />
-                  <line x1="12" y1="17" x2="12" y2="19" stroke="#8B5CF6" strokeWidth="1.5" />
-                </svg>
-              </div>
+              <img src="/iris-logo.png" alt="Iris Logo" className="w-8 h-8 object-contain" />
               <span className="text-xl font-bold tracking-tight text-[#121214]">
-                ATTNLY
+                Iris
               </span>
             </Link>
           </div>
@@ -197,9 +182,13 @@ export const AppNavbar: React.FC = () => {
 
             {isAuthenticated ? (
               <>
-                <div className="w-8 h-8 rounded-full bg-[#121214] text-white flex items-center justify-center font-bold text-xs">
+                <button
+                  onClick={() => navigate('/profile')}
+                  title="Creator Profile"
+                  className="w-8 h-8 rounded-full bg-[#121214] text-white flex items-center justify-center font-bold text-xs hover:bg-[#7C3AED] transition-colors cursor-pointer"
+                >
                   Me
-                </div>
+                </button>
                 <button onClick={logout} className="flex items-center justify-center w-8 h-8 rounded-full text-[#4A4950] hover:text-red-500 hover:bg-red-50 transition-colors">
                   <LogOut className="w-4 h-4" />
                 </button>
