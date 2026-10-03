@@ -10,3 +10,5 @@ jupyter
 notebook
 matplotlib
 pillow
+pandas==1.2.5
+scikit-image==0.18.3

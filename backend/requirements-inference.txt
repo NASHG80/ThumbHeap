@@ -1,0 +1,83 @@
+# =============================================================================
+# ThumbHeap — Inference Environment Requirements
+# Python 3.13 | Windows | CUDA 12.8 | RTX 5050
+#
+# This environment runs the live ML inference pipeline:
+#   backend/api/inference_service.py
+#   backend/api/main.py (FastAPI server)
+#
+# It is SEPARATE from .venv-fusion (Python 3.14) which is used for
+# Fusion model training only.
+#
+# Setup:
+#   py -3.13 -m venv backend\.venv-inference
+#   backend\.venv-inference\Scripts\activate
+#   pip install -r backend/requirements-inference.txt
+# =============================================================================
+
+# --- PyTorch (CUDA 12.8 build for RTX 5050 / sm_120) -------------------------
+# Install FIRST with the official CUDA 12.8 index before installing other deps.
+# Run separately:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#
+# Pinned here for documentation; comment out if using the index-url method:
+torch>=2.4.0
+torchvision>=0.19.0
+
+# --- FastAPI server -----------------------------------------------------------
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9         # required for UploadFile / multipart form data
+
+# --- Auth & security ---------------------------------------------------------
+PyJWT>=2.8.0
+bcrypt>=4.1.3
+python-dotenv>=1.0.1
+
+# --- MongoDB -----------------------------------------------------------------
+pymongo>=4.7.0
+
+# --- Cloudinary --------------------------------------------------------------
+cloudinary>=1.40.0
+
+# --- PaddlePaddle + PaddleOCR (text detection, ch 1) ------------------------
+# Person B's confirmed working versions (Windows, Python 3.x compatible).
+# PaddlePaddle 3.0.0 supports Python 3.8–3.13.
+# Install separately if the GPU wheel is needed:
+#   pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
+paddlepaddle==3.0.0
+paddleocr==3.0.0
+
+# --- YOLO-World-S (object detection, ch 3) -----------------------------------
+# ultralytics 8.x supports Python 3.8–3.13.
+# Version confirmed by Person B's environment.
+ultralytics>=8.4.0
+
+# --- OpenCV (YuNet face detection + OpenCV feature maps) --------------------
+# OpenCV 5.x on PyPI supports Python 3.13.
+opencv-python>=4.10.0
+
+# --- scikit-image (required by TranSalNet_Res.py line 6) --------------------
+# NOTE: TranSalNet_Res.py imports `from skimage import io, transform` at
+# module level. This import is not exercised during our inference path
+# (preprocess_img in data_process.py uses only cv2/PIL/numpy), but Python
+# evaluates the import at load time, so scikit-image must be installed.
+# scikit-image 0.24+ supports Python 3.13.
+scikit-image>=0.24.0
+
+# --- scipy (transitive dependency of scikit-image; also used by TranSalNet) -
+# scipy 1.14+ supports Python 3.13.
+# IMPORTANT: On Windows the Application Control policy may block native scipy
+# DLLs. If this occurs:
+#   1. Try scipy 1.13 (older ABI). 
+#   2. Or patch TranSalNet_Res.py to lazy-import skimage (see docs).
+scipy>=1.13.0
+
+# --- Core numerical / image processing ---------------------------------------
+numpy>=1.26.0                   # scikit-image / ultralytics require numpy >=1.24
+Pillow>=10.3.0
+pandas>=2.2.0
+matplotlib>=3.8.0               # used by generate_visual_comparisons.py
+
+# --- Pydantic (FastAPI models) -----------------------------------------------
+pydantic>=2.7.0
