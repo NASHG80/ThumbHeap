@@ -72,3 +72,27 @@ coverage/
 # =========================
 *.tmp
 *.temp
+
+# =========================
+# Data, Models & Checkpoints
+# =========================
+# Virtual environments
+.venv*/
+backend/.venv*/
+
+# Data directories (images, heatmaps, processed data)
+backend/data/
+backend/person_c/data/
+frontend/public/images/
+frontend/public/thumbnails/
+
+# Model weights and checkpoints
+*.pth
+*.pt
+backend/models/transalnet/pretrained_models/
+backend/fusion/checkpoints/
+
+# Outputs and scripts
+backend/outputs/
+backend/fusion/results/
+validate_heatmaps_quick.py
