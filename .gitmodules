@@ -1,0 +1,3 @@
+[submodule "backend/models/transalnet"]
+	path = backend/models/transalnet
+	url = https://github.com/LJOVO/TranSalNet.git

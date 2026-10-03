@@ -98,7 +98,6 @@ backend/testimage/
 *.npy
 backend/models/transalnet/pretrained_models/
 backend/fusion/checkpoints/
-backend/models/
 backend/weights/
 
 # Outputs and scripts
