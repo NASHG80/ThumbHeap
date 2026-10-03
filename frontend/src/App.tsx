@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
@@ -21,7 +21,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/analyze" element={<Analyze />} />
-        <Route path="/attention-budget" element={<AttentionBudget />} />
+        <Route path="/attention-budget" element={<Navigate replace to="/analyze" />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/analytics" element={<Analytics />} />
       </Routes>

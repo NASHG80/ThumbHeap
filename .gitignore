@@ -73,31 +73,35 @@ coverage/
 *.tmp
 *.temp
 
-# Person C local environment
+# =========================
+# Data, Models & Checkpoints
+# =========================
+# Virtual environments
+.venv*/
+backend/.venv*/
 backend/person_c/.venv-c/
-
-# OSIE raw dataset
-backend/person_c/data/raw/osie/
-
-# Generated OSIE processed dataset
-backend/person_c/data/processed/osie/
-
-# Generated outputs
-backend/person_c/outputs/
-
-# Person B local environment
 backend/.venv-person-b/
 
-# Local/generated data
-backend/outputs/
+# Data directories (images, heatmaps, processed data)
+backend/data/
+backend/person_c/data/
+backend/person_c/data/raw/osie/
+backend/person_c/data/processed/osie/
+frontend/public/images/
+frontend/public/thumbnails/
 backend/testimage/
 
-# Local model files
-backend/models/
-backend/weights/
-
-# Model and generated array files
+# Model weights and checkpoints
+*.pth
 *.pt
 *.onnx
-*.pth
 *.npy
+backend/models/transalnet/pretrained_models/
+backend/fusion/checkpoints/
+backend/weights/
+
+# Outputs and scripts
+backend/outputs/
+backend/fusion/results/
+backend/person_c/outputs/
+validate_heatmaps_quick.py

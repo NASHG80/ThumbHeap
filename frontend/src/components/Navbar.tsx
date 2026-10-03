@@ -6,7 +6,7 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -14,11 +14,8 @@ export const Navbar: React.FC = () => {
 
   return (
     <header
-      id="navbar"
-      className={`navbar fixed top-0 inset-x-0 z-50 transition-colors duration-200 ${
-        scrolled
-          ? 'bg-[#FAF9F5]/90 backdrop-blur-md border-b border-[#E6E4DE] shadow-xs'
-          : 'bg-transparent border-b border-transparent'
+      className={`fixed top-0 inset-x-0 z-50 transition-colors duration-200 ${
+        scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
@@ -36,58 +33,25 @@ export const Navbar: React.FC = () => {
           </a>
         </div>
 
-        {/* Center: Navigation Links */}
-        <nav
-          className="navbar-links hidden md:flex items-center gap-8 text-sm font-medium text-[#4A4950]"
-          aria-label="Main Navigation"
-        >
-          <a
-            href="#hero"
-            className="hover:text-[#121214] transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#121214] after:absolute after:bottom-0 after:left-0 after:transition-all after:duration-200"
-          >
-            Home
-          </a>
-          <a
-            href="#features"
-            className="hover:text-[#121214] transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#121214] after:absolute after:bottom-0 after:left-0 after:transition-all after:duration-200"
-          >
-            Features
-          </a>
-          <a
-            href="#editor"
-            className="hover:text-[#121214] transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#121214] after:absolute after:bottom-0 after:left-0 after:transition-all after:duration-200"
-          >
-            Editor
-          </a>
-          <a
-            href="#analytics"
-            className="hover:text-[#121214] transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#121214] after:absolute after:bottom-0 after:left-0 after:transition-all after:duration-200"
-          >
-            Analytics
-          </a>
-          <a
-            href="#about"
-            className="hover:text-[#121214] transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#121214] after:absolute after:bottom-0 after:left-0 after:transition-all after:duration-200"
-          >
-            About
-          </a>
+        {/* Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
+          <a href="#" className="hover:text-black transition-colors">Product</a>
+          <a href="#features" className="hover:text-black transition-colors">Features</a>
+          <a href="#" className="hover:text-black transition-colors">Pricing</a>
+          <a href="#about" className="hover:text-black transition-colors">About</a>
+          <a href="#" className="hover:text-black transition-colors">FAQ</a>
         </nav>
 
-        {/* Right: Actions */}
-        <div className="navbar-actions flex items-center gap-4">
-          <Link
-            to="/login"
-            className="navbar-login text-sm font-semibold text-[#37363D] hover:text-[#121214] px-3 py-2 transition-colors cursor-pointer"
-          >
-            Log in
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          <Link to="/login" className="text-sm font-semibold text-gray-700 hover:text-black transition-colors px-2">
+            Sign in
           </Link>
-          <Link
-            to="/signup"
-            className="navbar-signup inline-flex items-center justify-center px-4.5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#121214] hover:bg-[#25252A] rounded-lg transition-colors shadow-xs cursor-pointer tracking-tight"
-          >
-            Sign up
+          <Link to="/signup" className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-black hover:bg-gray-800 rounded-lg transition-colors">
+            Get started
           </Link>
         </div>
+        
       </div>
     </header>
   );

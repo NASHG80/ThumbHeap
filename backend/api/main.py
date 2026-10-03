@@ -1,5 +1,8 @@
 import os
+import io
+import logging
 import datetime
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +16,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+import api.inference_service as inference_service
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load ML models once at startup; release nothing (models live for process lifetime)."""
+    try:
+        inference_service.initialize()
+        logger.info("ML models loaded successfully at startup.")
+    except Exception as exc:
+        logger.error(f"ML model initialisation failed: {exc}")
+        # Server still starts; /api/analyze will return 503 if models are missing.
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -98,6 +117,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
+    """Original upload endpoint — stores raw thumbnail in Cloudinary + MongoDB unchanged."""
     try:
         # Upload the file to Cloudinary in the "Thumbheat" folder
         result = cloudinary.uploader.upload(file.file, folder="Thumbheat")
@@ -113,8 +133,85 @@ async def upload_image(file: UploadFile = File(...), user_id: str = Depends(get_
         
         return {"id": str(doc_id), "url": secure_url}
     except Exception as e:
-        print(f"Cloudinary Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail="Upload failed.")
+
+
+@app.post("/api/analyze")
+async def analyze_thumbnail(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
+    """
+    ML inference endpoint.
+
+    1. Uploads the original thumbnail to Cloudinary (reuses existing client).
+    2. Runs the full 8-channel Fusion inference pipeline.
+    3. Uploads the attention-heatmap overlay to Cloudinary.
+    4. Stores all metadata in the existing thumbnails collection (reuses existing MongoDB connection).
+    5. Returns URLs and detection counts to the frontend.
+    """
+    # Read file bytes once; UploadFile stream is single-use
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Empty file received.")
+
+    # ── Upload original thumbnail ────────────────────────────────────────────
+    try:
+        orig_result = cloudinary.uploader.upload(
+            io.BytesIO(image_bytes), folder="Thumbheat"
+        )
+        original_url = orig_result.get("secure_url")
+    except Exception as exc:
+        logger.error(f"Cloudinary original upload failed: {exc}")
+        raise HTTPException(status_code=502, detail="Image storage failed.")
+
+    # ── Run ML inference ────────────────────────────────────────────────────
+    try:
+        result = inference_service.run_inference(image_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except RuntimeError as exc:
+        logger.error(f"Inference error: {exc}")
+        raise HTTPException(status_code=503, detail="Inference pipeline unavailable.")
+    except Exception as exc:
+        logger.error(f"Unexpected inference error: {exc}")
+        raise HTTPException(status_code=500, detail="Inference failed.")
+
+    # ── Upload heatmap overlay ───────────────────────────────────────────────
+    try:
+        overlay_result = cloudinary.uploader.upload(
+            io.BytesIO(result["overlay_png"]),
+            folder="Thumbheat/overlays",
+            format="png",
+        )
+        overlay_url = overlay_result.get("secure_url")
+    except Exception as exc:
+        logger.error(f"Cloudinary overlay upload failed: {exc}")
+        overlay_url = None   # Non-fatal; numeric result is still valid
+
+    # ── Persist metadata in existing thumbnails collection ──────────────────
+    detections = result["detections"]
+    try:
+        doc_id = thumbnails_col.insert_one({
+            "user_id":          user_id,
+            "filename":         file.filename,
+            "cloudinary_url":   original_url,
+            "overlay_url":      overlay_url,
+            "created_at":       datetime.datetime.utcnow(),
+            "ai_scores": {
+                "texts_detected":   detections["texts"],
+                "faces_detected":   detections["faces"],
+                "objects_detected": detections["objects"],
+            },
+        }).inserted_id
+    except Exception as exc:
+        logger.error(f"MongoDB insert failed: {exc}")
+        raise HTTPException(status_code=500, detail="Result storage failed.")
+
+    return {
+        "id":          str(doc_id),
+        "url":         original_url,
+        "overlay_url": overlay_url,
+        "detections":  detections,
+    }
 
 @app.get("/api/thumbnails")
 def get_thumbnails(user_id: str = Depends(get_current_user)):

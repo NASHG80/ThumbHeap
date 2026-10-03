@@ -19,7 +19,12 @@ const budgetData = [
   { name: 'Directional Cue', percentage: 2, insight: 'Subtle arrows successfully direct attention without stealing focus.' }
 ] as const;
 
-export const AttentionBudget: React.FC = () => {
+interface AttentionBudgetProps {
+  isEmbedded?: boolean;
+  imageUrl?: string;
+}
+
+export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = false, imageUrl }) => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
   
@@ -138,10 +143,10 @@ export const AttentionBudget: React.FC = () => {
   };
 
   return (
-    <div ref={pageRef} className="attention-page min-h-screen bg-[#FAF9F5] text-[#121214] font-sans selection:bg-purple-100 selection:text-purple-900 pb-24">
-      <AppNavbar />
+    <div ref={pageRef} className={`attention-page ${isEmbedded ? '' : 'min-h-screen bg-[#FAF9F5] text-[#121214] font-sans selection:bg-purple-100 selection:text-purple-900 pb-24'}`}>
+      {!isEmbedded && <AppNavbar />}
       
-      <main className="pt-32 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
+      <main className={`${isEmbedded ? 'pt-12' : 'pt-32 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto'}`}>
         
         {/* PAGE HERO */}
         <div className="attention-header text-center max-w-3xl mx-auto mb-16">
@@ -184,7 +189,7 @@ export const AttentionBudget: React.FC = () => {
             <div className="attention-thumbnail bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5 relative overflow-hidden">
               <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center group">
                 <img 
-                  src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80" 
+                  src={imageUrl || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80"} 
                   alt="Thumbnail" 
                   className={`w-full h-full object-cover transition-opacity duration-500 ${selectedCategory ? 'opacity-40' : 'opacity-100'}`} 
                 />

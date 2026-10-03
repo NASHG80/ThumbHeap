@@ -1,468 +1,74 @@
-import React, { useState } from 'react';
-import { ThumbnailVisual } from './ThumbnailVisual';
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const Features: React.FC = () => {
-  // Interactive state for Feature 6 (Accessibility Vision Simulator)
-  const [visionMode, setVisionMode] = useState<'normal' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'lowvision'>('normal');
+  const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Filter styles for Accessibility simulation
-  const getFilterStyle = () => {
-    switch (visionMode) {
-      case 'protanopia':
-        return 'contrast(1.05) hue-rotate(-28deg) saturate(0.75)';
-      case 'deuteranopia':
-        return 'contrast(1.02) hue-rotate(32deg) saturate(0.7)';
-      case 'tritanopia':
-        return 'contrast(1.1) sepia(0.3) hue-rotate(180deg) saturate(0.85)';
-      case 'lowvision':
-        return 'blur(3.5px) contrast(0.85)';
-      default:
-        return 'none';
-    }
-  };
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.bento-card',
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 75%',
+          }
+        }
+      );
+    }, sectionRef);
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section
-      id="features"
-      className="features relative py-24 sm:py-32 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto border-t border-[#E6E4DE]"
-    >
-      {/* Editorial Section Header */}
-      <div className="max-w-3xl mb-20 lg:mb-28">
-        <div
-          data-animate="fade"
-          className="feature-kicker inline-flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-[#7C3AED] mb-3"
-        >
-          <span>Attention Intelligence</span>
-          <span aria-hidden="true" className="text-[#D5D3CC]">·</span>
-          <span>Core Capabilities</span>
-        </div>
-        <h2
-          data-animate="reveal"
-          className="feature-section-title text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#121214] leading-[1.08] text-balance"
-        >
-          From thumbnail to attention intelligence.
-        </h2>
-        <p
-          data-animate="fade"
-          className="feature-section-subtitle mt-6 text-lg sm:text-xl text-[#52525B] leading-relaxed max-w-2xl font-normal"
-        >
-          See what attracts attention, understand why, and turn insight into better creative decisions.
-        </p>
-      </div>
+    <section id="features" ref={sectionRef} className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
+      
+      {/* 2x2 Bento Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-auto">
 
-      {/* Feature Experience List: Large, Asymmetric Editorial Cards */}
-      <div className="space-y-24 lg:space-y-36">
-
-        {/* =========================================================================
-            FEATURE 1: AI ATTENTION HEATMAP
-           ========================================================================= */}
-        <div
-          id="feature-heatmap"
-          data-animate="parallax"
-          className="feature-card grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs"
-        >
-          {/* Content side */}
-          <div className="feature-content lg:col-span-5 space-y-6">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              01 · Visual Saliency
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight">
-              AI Attention Heatmap
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed">
-              Synthesize biological human eye fixations during the critical 1.2-second decision window.
-              High-intensity hotspots reveal where viewers look first before scrolling past.
-            </p>
-            <div className="pt-2 flex flex-col gap-3 font-mono text-xs text-[#52525B]">
-              <div className="flex items-center justify-between border-b border-[#F0EEE6] pb-2">
-                <span>Eye-tracking model:</span>
-                <span className="text-[#121214] font-semibold">SaliencyNet-v4.2</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-[#F0EEE6] pb-2">
-                <span>First glance window:</span>
-                <span className="text-[#121214] font-semibold">180ms – 450ms</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Confidence interval:</span>
-                <span className="text-[#7C3AED] font-semibold">97.8% verified</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Visual side: Decomposed Heatmap Stack */}
-          <div className="feature-visual lg:col-span-7">
-            <div className="relative rounded-2xl overflow-hidden border border-[#E6E4DE] bg-black aspect-video shadow-md">
-              {/* Image element */}
-              <div className="feature-heatmap-image absolute inset-0 z-0">
-                <ThumbnailVisual variant="hero" />
-              </div>
-
-              {/* Heatmap overlay layer (targetable by GSAP for opacity/blur animation) */}
-              <div
-                data-animate="fade"
-                className="feature-heatmap-layer absolute inset-0 z-10 pointer-events-none mix-blend-screen opacity-85"
-              >
-                {/* Hotspot 1: Face */}
-                <div className="feature-heatmap-hotspot absolute top-[18%] right-[16%] w-44 h-44 rounded-full heatmap-glow-high" />
-                {/* Hotspot 2: Title Hook */}
-                <div className="feature-heatmap-hotspot absolute top-[30%] left-[16%] w-56 h-36 rounded-full heatmap-glow-mid" />
-                {/* Hotspot 3: Subtext */}
-                <div className="feature-heatmap-hotspot absolute top-[12%] left-[10%] w-28 h-20 rounded-full heatmap-glow-low" />
-              </div>
-
-              {/* Intensity Legend Bar at bottom */}
-              <div className="feature-heatmap-label absolute bottom-3 left-4 right-4 z-20 px-3 py-2 rounded-lg bg-black/75 backdrop-blur-xs border border-white/10 flex items-center justify-between text-[11px] text-white font-mono">
-                <span className="text-neutral-400">Low (0%)</span>
-                <div className="h-2 flex-1 mx-4 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 via-amber-400 to-red-500" />
-                <span className="text-red-400 font-bold">Peak Fixation (100%)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            FEATURE 2: PREDICTED SCAN PATH
-           ========================================================================= */}
-        <div
-          id="feature-scanpath"
-          data-animate="parallax"
-          className="feature-card grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs"
-        >
-          {/* Visual side first on desktop for asymmetric rhythm */}
-          <div className="feature-visual lg:col-span-7 order-2 lg:order-1">
-            <div className="relative rounded-2xl overflow-hidden border border-[#E6E4DE] bg-neutral-900 aspect-video shadow-md">
-              <div className="absolute inset-0 opacity-70">
-                <ThumbnailVisual variant="hero" />
-              </div>
-
-              {/* Saccadic Scan Vectors SVG */}
-              <svg
-                className="absolute inset-0 w-full h-full z-20 pointer-events-none"
-                viewBox="0 0 800 450"
-              >
-                <defs>
-                  <marker id="scan-arrow-1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#8B5CF6" />
-                  </marker>
-                  <marker id="scan-arrow-2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#F59E0B" />
-                  </marker>
-                </defs>
-                <path
-                  className="scan-arrow"
-                  d="M 580,160 Q 420,120 280,180"
-                  fill="none"
-                  stroke="#8B5CF6"
-                  strokeWidth="3.5"
-                  strokeDasharray="6 4"
-                  markerEnd="url(#scan-arrow-1)"
-                />
-                <path
-                  className="scan-arrow"
-                  d="M 280,210 Q 380,310 540,340"
-                  fill="none"
-                  stroke="#F59E0B"
-                  strokeWidth="3.5"
-                  strokeDasharray="6 4"
-                  markerEnd="url(#scan-arrow-2)"
-                />
+        {/* Card 1: Attention Heatmap (Dark, top-left) */}
+        <div className="bento-card lg:col-span-7 relative bg-[#0D0D12] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row group">
+          {/* Subtle background glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          
+          <div className="relative z-10 p-10 flex flex-col justify-center max-w-sm">
+            <div className="w-12 h-12 rounded-2xl border border-white/20 flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
-
-              {/* Node 1 */}
-              <div className="scan-target absolute top-[28%] right-[24%] z-30 flex items-center gap-2">
-                <div className="scan-point w-9 h-9 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center font-bold text-sm shadow-xl border-2 border-white">
-                  <span className="scan-number">1</span>
-                </div>
-                <div className="bg-black/80 px-2 py-0.5 rounded text-[10px] text-white font-mono border border-white/15">
-                  Eyes · 0ms
-                </div>
-              </div>
-
-              {/* Node 2 */}
-              <div className="scan-target absolute top-[36%] left-[28%] z-30 flex items-center gap-2">
-                <div className="scan-point w-9 h-9 rounded-full bg-[#F59E0B] text-black flex items-center justify-center font-bold text-sm shadow-xl border-2 border-white">
-                  <span className="scan-number">2</span>
-                </div>
-                <div className="bg-black/80 px-2 py-0.5 rounded text-[10px] text-white font-mono border border-white/15">
-                  Hook Title · 140ms
-                </div>
-              </div>
-
-              {/* Node 3 */}
-              <div className="scan-target absolute bottom-[18%] right-[30%] z-30 flex items-center gap-2">
-                <div className="scan-point w-9 h-9 rounded-full bg-cyan-400 text-black flex items-center justify-center font-bold text-sm shadow-xl border-2 border-white">
-                  <span className="scan-number">3</span>
-                </div>
-                <div className="bg-black/80 px-2 py-0.5 rounded text-[10px] text-white font-mono border border-white/15">
-                  Context · 320ms
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Content side */}
-          <div className="feature-content lg:col-span-5 order-1 lg:order-2 space-y-6">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              02 · Saccadic Flow
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight">
-              Predicted Scan Path
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed">
-              Track the exact sequential journey viewers take across your composition.
-              Verify whether your critical text hook is read in proper hierarchy or overshadowed by clutter.
+            <h3 className="text-2xl font-bold text-white mb-3">Attention Heatmap</h3>
+            <p className="text-gray-400 text-[15px] leading-relaxed mb-8">
+              See exactly where viewers look first, how long they focus, and which elements work best.
             </p>
-            {/* Sequential Flow Step Markers */}
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#FAF9F5] border border-[#E6E4DE]">
-                <span className="w-6 h-6 rounded-full bg-[#8B5CF6] text-white text-xs font-bold font-mono flex items-center justify-center">1</span>
-                <span className="text-sm font-semibold text-[#121214]">Initial Focal Attraction</span>
-                <span className="ml-auto font-mono text-xs text-[#71717A]">Face / Eyes</span>
-              </div>
-              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#FAF9F5] border border-[#E6E4DE]">
-                <span className="w-6 h-6 rounded-full bg-[#F59E0B] text-black text-xs font-bold font-mono flex items-center justify-center">2</span>
-                <span className="text-sm font-semibold text-[#121214]">Cognitive Anchor</span>
-                <span className="ml-auto font-mono text-xs text-[#71717A]">Title Text</span>
-              </div>
-              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#FAF9F5] border border-[#E6E4DE]">
-                <span className="w-6 h-6 rounded-full bg-cyan-400 text-black text-xs font-bold font-mono flex items-center justify-center">3</span>
-                <span className="text-sm font-semibold text-[#121214]">Secondary Context</span>
-                <span className="ml-auto font-mono text-xs text-[#71717A]">Subject Props</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            FEATURE 3: ATTENTION BUDGET
-           ========================================================================= */}
-        <div
-          id="feature-budget"
-          data-animate="parallax"
-          className="feature-card grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs"
-        >
-          {/* Content side */}
-          <div className="feature-content lg:col-span-5 space-y-6">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              03 · Composition Math
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight">
-              Attention Budget
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed">
-              Every thumbnail has 100% of a viewer's attention to distribute. If background noise takes 35%,
-              your core message starves. Optimize balance before rendering final assets.
-            </p>
-            <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE]">
-              <span className="text-xs font-semibold text-[#7C3AED] uppercase tracking-wider font-mono">Algorithm Verdict</span>
-              <p className="text-sm text-[#121214] mt-1 font-medium">
-                "Optimal distribution achieved: 69% concentrated across face and text hook."
-              </p>
-            </div>
+            <a href="#" className="inline-flex items-center text-white font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+              Explore <span>→</span>
+            </a>
           </div>
 
-          {/* Visual side: Decomposed Visual Bars & Radial Graphic */}
-          <div className="feature-visual lg:col-span-7">
-            <div className="p-6 sm:p-8 rounded-2xl bg-[#FAF9F5] border border-[#E6E4DE] shadow-inner space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E6E4DE]">
-                <span className="text-sm font-bold text-[#121214]">Total Saliency Budget Allocation</span>
-                <span className="text-xs font-mono text-[#7C3AED] font-semibold">100.0% ANALYZED</span>
+          <div className="relative z-0 w-full h-64 md:h-auto overflow-hidden perspective-[1000px] flex items-center justify-center -mr-10 -mb-10 md:mb-0 md:mr-0">
+            <div className="relative w-[120%] transform rotate-y-[-15deg] rotate-x-[5deg] group-hover:rotate-y-[-10deg] transition-transform duration-700 origin-right translate-x-12">
+              <div className="relative aspect-video rounded-xl overflow-hidden border border-white/20 shadow-2xl">
+                <img src="/images/astronaut_thumb.jpg" alt="Thumbnail" className="w-full h-full object-cover grayscale brightness-75" />
+                {/* CSS Heatmaps */}
+                <div className="absolute top-[20%] right-[30%] w-24 h-24 bg-red-500 rounded-full blur-[25px] mix-blend-screen opacity-90" />
+                <div className="absolute top-[30%] right-[10%] w-16 h-16 bg-yellow-400 rounded-full blur-[15px] mix-blend-screen opacity-90" />
               </div>
-
-              {/* Bar 1: Face */}
-              <div className="budget-item space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="budget-label font-semibold text-[#121214] flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]" />
-                    Face & Expression
-                  </span>
-                  <span className="budget-percentage font-mono font-bold text-[#121214] tabular-nums">41%</span>
-                </div>
-                <div className="w-full bg-[#E6E4DE] h-3.5 rounded-full overflow-hidden p-0.5">
-                  <div className="budget-bar h-full bg-[#8B5CF6] rounded-full transition-all duration-300" style={{ width: '41%' }} />
-                </div>
-              </div>
-
-              {/* Bar 2: Title */}
-              <div className="budget-item space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="budget-label font-semibold text-[#121214] flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                    Hook Title Typography
-                  </span>
-                  <span className="budget-percentage font-mono font-bold text-[#121214] tabular-nums">28%</span>
-                </div>
-                <div className="w-full bg-[#E6E4DE] h-3.5 rounded-full overflow-hidden p-0.5">
-                  <div className="budget-bar h-full bg-yellow-500 rounded-full transition-all duration-300" style={{ width: '28%' }} />
-                </div>
-              </div>
-
-              {/* Bar 3: Subject */}
-              <div className="budget-item space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="budget-label font-semibold text-[#121214] flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
-                    Subject & Physical Silhouette
-                  </span>
-                  <span className="budget-percentage font-mono font-bold text-[#121214] tabular-nums">19%</span>
-                </div>
-                <div className="w-full bg-[#E6E4DE] h-3.5 rounded-full overflow-hidden p-0.5">
-                  <div className="budget-bar h-full bg-cyan-500 rounded-full transition-all duration-300" style={{ width: '19%' }} />
-                </div>
-              </div>
-
-              {/* Bar 4: Background */}
-              <div className="budget-item space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="budget-label font-semibold text-[#121214] flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-400" />
-                    Residual Background & Noise
-                  </span>
-                  <span className="budget-percentage font-mono font-bold text-[#121214] tabular-nums">12%</span>
-                </div>
-                <div className="w-full bg-[#E6E4DE] h-3.5 rounded-full overflow-hidden p-0.5">
-                  <div className="budget-bar h-full bg-neutral-400 rounded-full transition-all duration-300" style={{ width: '12%' }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            FEATURE 4: A/B THUMBNAIL BATTLE
-           ========================================================================= */}
-        <div
-          id="feature-battle"
-          data-animate="parallax"
-          className="feature-card p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs space-y-10"
-        >
-          <div className="max-w-2xl">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              04 · Head-to-Head Testing
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight mt-2">
-              A/B Thumbnail Battle
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed mt-2">
-              Compare two creative directions before risking your upload on YouTube.
-              Evaluate attention concentration, text legibility, and subject focus side-by-side.
-            </p>
-          </div>
-
-          {/* Battle Comparison Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* Candidate A (Winner) */}
-            <div className="battle-candidate rounded-2xl p-4 sm:p-5 bg-[#FAF9F5] border-2 border-[#8B5CF6]/50 shadow-sm relative space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-[#121214]">Thumbnail Variant A</span>
-                <span className="bg-[#8B5CF6] text-white px-2 py-0.5 text-xs font-mono font-bold rounded">
-                  WINNER · +31% PROJECTED CTR
-                </span>
-              </div>
-              <div className="aspect-video w-full rounded-xl overflow-hidden border border-[#E6E4DE]">
-                <ThumbnailVisual variant="hero" />
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Concentration</span>
-                  <span className="text-base font-bold text-[#121214] tabular-nums">88% (High)</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Face Fixation</span>
-                  <span className="text-base font-bold text-[#7C3AED] tabular-nums">41%</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Text Readability</span>
-                  <span className="text-base font-bold text-[#121214] tabular-nums">0.18s speed</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Background Clutter</span>
-                  <span className="text-base font-bold text-emerald-600 tabular-nums">12% (Low)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Candidate B */}
-            <div className="battle-candidate rounded-2xl p-4 sm:p-5 bg-[#FAF9F5] border border-[#E6E4DE] shadow-xs relative space-y-4 opacity-85">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-[#121214]">Thumbnail Variant B</span>
-                <span className="text-neutral-500 text-xs font-mono">
-                  Diffused Attention
-                </span>
-              </div>
-              <div className="aspect-video w-full rounded-xl overflow-hidden border border-[#E6E4DE]">
-                <ThumbnailVisual variant="variantB" />
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Concentration</span>
-                  <span className="text-base font-bold text-[#121214] tabular-nums">64% (Medium)</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Face Fixation</span>
-                  <span className="text-base font-bold text-[#71717A] tabular-nums">18%</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Text Readability</span>
-                  <span className="text-base font-bold text-[#121214] tabular-nums">0.34s speed</span>
-                </div>
-                <div className="p-2.5 rounded bg-white border border-[#E6E4DE]">
-                  <span className="text-[#71717A] block">Background Clutter</span>
-                  <span className="text-base font-bold text-amber-600 tabular-nums">34% (High)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            FEATURE 5: YOUTUBE FEED SIMULATOR
-           ========================================================================= */}
-        <div
-          id="feature-feed"
-          data-animate="parallax"
-          className="feature-card grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs"
-        >
-          {/* Content side */}
-          <div className="feature-content lg:col-span-5 space-y-6">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              05 · Context Simulation
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight">
-              YouTube Feed Simulator
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed">
-              No thumbnail exists in a vacuum. Test how your design commands attention inside a realistic
-              YouTube home feed alongside high-competition viral videos.
-            </p>
-            <div className="flex items-center gap-4 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE] font-mono text-xs">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <div>
-                <span className="font-bold text-[#121214]">Stopping Power Index: </span>
-                <span className="text-[#7C3AED] font-bold">8.7 / 10</span>
-                <span className="text-[#71717A] block text-[11px]">Ranks in top 6% of feed saliency</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Visual side: Mobile-style Feed Preview */}
-          <div className="feature-visual lg:col-span-7">
-            <div className="feed max-w-md mx-auto rounded-3xl bg-[#0F0F12] text-white p-4 shadow-2xl border-4 border-[#2A2B33] space-y-4">
-              <div className="flex items-center justify-between px-2 pt-1 border-b border-white/10 pb-2 text-xs font-mono text-neutral-400">
-                <span>YouTube Mobile Feed</span>
-                <span>Subscribers: 840K</span>
-              </div>
-
-              {/* Feed Item 1: Competitor */}
-              <div className="feed-item space-y-2">
-                <div className="feed-thumbnail aspect-video w-full rounded-xl overflow-hidden">
-                  <ThumbnailVisual variant="competing1" />
-                </div>
-                <div className="flex gap-2 px-1">
-                  <div className="w-7 h-7 rounded-full bg-cyan-800 shrink-0" />
-                  <div className="text-xs">
-                    <p className="font-medium text-white line-clamp-1">M4 Ultra vs Studio: The Brutal Truth</p>
-                    <p className="text-[10px] text-neutral-400">Hardware Lab · 340K views · 2 days ago</p>
+              {/* Floating Stat Card */}
+              <div className="absolute -bottom-6 left-12 bg-[#1A1A24]/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex items-center gap-4 transform translate-z-[50px]">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-white">82%</span>
+                    <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12l7-7 7 7M12 19V5"/></svg>
                   </div>
                 </div>
               </div>
@@ -470,7 +76,7 @@ export const Features: React.FC = () => {
               {/* Feed Item 2: Iris Target (Highlighted with subtle indicator) */}
               <div className="feed-item feed-target space-y-2 relative rounded-xl p-1 bg-white/5 border border-[#8B5CF6]">
                 <div className="feed-thumbnail aspect-video w-full rounded-lg overflow-hidden relative">
-                  <ThumbnailVisual variant="hero" />
+                  <div className="w-full h-full bg-[#1a1a2e] flex items-center justify-center text-white text-xs">Your Thumbnail</div>
                   <div className="feed-metric absolute top-2 right-2 px-2 py-0.5 bg-[#8B5CF6] text-white text-[10px] font-mono font-bold rounded shadow-md">
                     Iris · #1 Focal Pick
                   </div>
@@ -487,153 +93,182 @@ export const Features: React.FC = () => {
               {/* Feed Item 3: Competitor 2 */}
               <div className="feed-item space-y-2 opacity-60">
                 <div className="feed-thumbnail aspect-video w-full rounded-xl overflow-hidden">
-                  <ThumbnailVisual variant="competing2" />
+                  <div className="w-full h-full bg-[#222] flex items-center justify-center text-gray-400 text-[10px]">Focus on subject</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =========================================================================
-            FEATURE 6: ACCESSIBILITY ANALYSIS
-           ========================================================================= */}
-        <div
-          id="feature-accessibility"
-          data-animate="parallax"
-          className="feature-card grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs"
-        >
-          {/* Visual side first */}
-          <div className="feature-visual lg:col-span-7 order-2 lg:order-1">
-            <div className="rounded-2xl overflow-hidden border border-[#E6E4DE] bg-black aspect-video shadow-md relative">
-              <div
-                className="w-full h-full transition-all duration-200"
-                style={{ filter: getFilterStyle() }}
-              >
-                <ThumbnailVisual variant="hero" />
-              </div>
-              <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-xs px-2.5 py-1 rounded text-xs font-mono text-white border border-white/10">
-                Mode: {visionMode.toUpperCase()}
-              </div>
-            </div>
-
-            {/* Interactive Mode Selector (Segmented control) */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {(['normal', 'protanopia', 'deuteranopia', 'tritanopia', 'lowvision'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setVisionMode(mode)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
-                    visionMode === mode
-                      ? 'bg-[#121214] text-white border-[#121214]'
-                      : 'bg-[#FAF9F5] text-[#52525B] border-[#E6E4DE] hover:text-[#121214]'
-                  }`}
-                >
-                  {mode === 'normal' && 'Normal Vision'}
-                  {mode === 'protanopia' && 'Protanopia (Red)'}
-                  {mode === 'deuteranopia' && 'Deuteranopia (Green)'}
-                  {mode === 'tritanopia' && 'Tritanopia (Blue)'}
-                  {mode === 'lowvision' && 'Low Vision (Blur)'}
-                </button>
-              ))}
-            </div>
+        {/* Card 2: A/B Thumbnail Battle (Light, top-right) */}
+        <div className="bento-card lg:col-span-5 relative bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 flex flex-col group p-10">
+          <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 text-black group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="12" y1="3" x2="12" y2="21" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-black mb-3">A/B Thumbnail Battle</h3>
+          <p className="text-gray-500 text-[15px] leading-relaxed mb-8 max-w-[55%] xl:max-w-[60%] relative z-10">
+            Compare multiple thumbnail variations side by side and see which one is predicted to perform better.
+          </p>
+          <div className="mt-auto relative z-10">
+            <a href="#" className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-[#121214] hover:bg-black rounded-full transition-colors w-max gap-2 group-hover:gap-3">
+              Explore <span>→</span>
+            </a>
           </div>
 
-          {/* Content side */}
-          <div className="feature-content lg:col-span-5 order-1 lg:order-2 space-y-6">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-              06 · Inclusive Design
-            </span>
-            <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight">
-              Accessibility Analysis
-            </h3>
-            <p className="feature-card-description text-base text-[#52525B] leading-relaxed">
-              Over 300 million people experience color vision deficiency. Test your thumbnail against
-              protanopia, deuteranopia, tritanopia, and low-vision blur to ensure your title remains legible.
-            </p>
-            <div className="space-y-2 text-xs font-mono">
-              <div className="flex items-center justify-between p-2 rounded bg-[#FAF9F5] border border-[#E6E4DE]">
-                <span>WCAG Text Contrast:</span>
-                <span className="text-emerald-600 font-bold">4.8:1 (AA Pass)</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-[#FAF9F5] border border-[#E6E4DE]">
-                <span>Color Independence:</span>
-                <span className="text-[#121214] font-bold">96% Legibility</span>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[55%] md:w-[45%] h-48 pointer-events-none perspective-[1000px]">
+            {/* Variant A (Back) */}
+            <div className="absolute top-0 right-4 w-56 aspect-video bg-white p-1 rounded-xl shadow-lg border border-gray-200 transform rotate-[-5deg] scale-90 opacity-60 group-hover:rotate-[-8deg] transition-transform duration-500">
+              <img src="/images/astronaut_thumb.jpg" className="w-full h-full object-cover rounded-lg" />
+              <div className="absolute -top-3 -left-3 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">A</div>
+            </div>
+            {/* Variant B (Front) */}
+            <div className="absolute bottom-4 right-12 w-56 aspect-video bg-white p-1 rounded-xl shadow-2xl border border-gray-200 transform rotate-[3deg] group-hover:rotate-[5deg] group-hover:translate-y-[-10px] transition-transform duration-500 z-10">
+              <img src="/images/astronaut_thumb.jpg" className="w-full h-full object-cover rounded-lg" />
+              <div className="absolute -top-3 -left-3 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">B</div>
+              {/* Floating Stat Card */}
+              <div className="absolute -bottom-4 -right-4 bg-white border border-gray-100 rounded-xl p-3 shadow-xl flex flex-col items-center z-20">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold text-black">+24%</span>
+                  <svg className="w-3 h-3 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12l7-7 7 7M12 19V5"/></svg>
+                </div>
+                <div className="text-[9px] text-gray-500">Predicted CTR</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =========================================================================
-            FEATURE 7: AI INSIGHTS + CREATOR ANALYTICS
-           ========================================================================= */}
-        <div
-          id="feature-analytics"
-          data-animate="parallax"
-          className="feature-card p-8 sm:p-12 rounded-3xl bg-white border border-[#E6E4DE] shadow-xs space-y-8"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span className="font-mono text-xs uppercase tracking-wider text-[#7C3AED] font-semibold">
-                07 · Growth Correlations
-              </span>
-              <h3 className="feature-card-title text-3xl sm:text-4xl font-bold text-[#121214] tracking-tight mt-1">
-                AI Insights + Creator Analytics
-              </h3>
-            </div>
-            {/* Small Verified Data Layer badge representing Reclaim */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#E6E4DE] text-xs font-mono text-[#52525B]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Verified data layer via Reclaim</span>
-            </div>
+        {/* Card 3: Attention Budget (Light, bottom-left) */}
+        <div className="bento-card lg:col-span-4 relative bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 flex flex-col group p-10">
+          <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 text-black group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg>
           </div>
-
-          <p className="feature-card-description text-base text-[#52525B] max-w-3xl leading-relaxed">
-            Correlate pre-publish attention scores with actual YouTube Studio telemetry — click-through rate,
-            impressions velocity, and viewer retention.
+          <h3 className="text-2xl font-bold text-black mb-3 max-w-[50%]">Attention Budget</h3>
+          <p className="text-gray-500 text-[15px] leading-relaxed mb-8 max-w-[50%] xl:max-w-[55%] relative z-10">
+            Break down how attention is distributed across faces, text, objects and background noise.
           </p>
-
-          {/* Metric Dashboard Concept */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE]">
-              <span className="text-xs font-mono text-[#71717A] uppercase">CTR Delta</span>
-              <div className="text-2xl font-bold font-mono text-emerald-600 mt-1 tabular-nums">+4.2%</div>
-              <span className="text-[11px] text-[#71717A]">vs channel average</span>
-            </div>
-            <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE]">
-              <span className="text-xs font-mono text-[#71717A] uppercase">Total Impressions</span>
-              <div className="text-2xl font-bold font-mono text-[#121214] mt-1 tabular-nums">1.48M</div>
-              <span className="text-[11px] text-[#71717A]">48-hour velocity</span>
-            </div>
-            <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE]">
-              <span className="text-xs font-mono text-[#71717A] uppercase">Focal Saliency</span>
-              <div className="text-2xl font-bold font-mono text-[#7C3AED] mt-1 tabular-nums">94/100</div>
-              <span className="text-[11px] text-[#71717A]">Top decile attention</span>
-            </div>
-            <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E6E4DE]">
-              <span className="text-xs font-mono text-[#71717A] uppercase">Avg View Duration</span>
-              <div className="text-2xl font-bold font-mono text-[#121214] mt-1 tabular-nums">8:41</div>
-              <span className="text-[11px] text-[#71717A]">61.2% retention</span>
-            </div>
+          <div className="mt-auto relative z-10">
+            <a href="#" className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-black bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-colors w-max gap-2 group-hover:gap-3">
+              Explore <span>→</span>
+            </a>
           </div>
 
-          {/* Analytics Highlight Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-50/60 to-violet-50/40 border border-purple-200/60 flex items-start gap-4">
-            <div className="w-8 h-8 rounded-lg bg-[#8B5CF6] text-white flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[45%] flex flex-col items-center justify-center pointer-events-none">
+            {/* Donut Chart */}
+            <div className="relative w-28 h-28 mb-6 group-hover:scale-105 transition-transform duration-500">
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#F3F4F6" strokeWidth="8" />
+                <path strokeDasharray="82, 100" d="M18 4 a 14 14 0 0 1 0 28 a 14 14 0 0 1 0 -28" fill="none" stroke="#27272A" strokeWidth="8" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black text-black leading-none">82</span>
+                <span className="text-[9px] text-gray-500 font-medium">/100</span>
+              </div>
+            </div>
+            
+            {/* Stats List */}
+            <div className="space-y-3 w-full">
+              <div className="flex justify-between items-center text-[11px]"><div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-black"/> <span className="font-semibold text-gray-700">Face</span></div><span className="text-gray-500 font-medium">42%</span></div>
+              <div className="flex justify-between items-center text-[11px]"><div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-gray-500"/> <span className="font-semibold text-gray-700">Text</span></div><span className="text-gray-500 font-medium">28%</span></div>
+              <div className="flex justify-between items-center text-[11px]"><div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-gray-300"/> <span className="font-semibold text-gray-700">Object</span></div><span className="text-gray-500 font-medium">18%</span></div>
+              <div className="flex justify-between items-center text-[11px]"><div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-gray-200"/> <span className="font-semibold text-gray-700">Background</span></div><span className="text-gray-500 font-medium">12%</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: YouTube Feed Simulator (Dark, bottom-right) */}
+        <div className="bento-card lg:col-span-8 relative bg-[#0D0D12] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row group">
+          {/* Abstract wave background */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+             <div className="absolute -left-20 -top-20 w-[400px] h-[400px] border-[1px] border-white/20 rounded-full" />
+             <div className="absolute left-10 top-10 w-[500px] h-[500px] border-[1px] border-white/10 rounded-full" />
+          </div>
+
+          <div className="relative z-10 p-10 flex flex-col justify-center max-w-sm">
+            <div className="w-12 h-12 rounded-2xl border border-white/20 bg-white/5 flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
               </svg>
             </div>
-            <div>
-              <span className="text-xs font-mono font-bold text-[#7C3AED] uppercase tracking-wide">
-                Predictive Observation
-              </span>
-              <p className="text-sm sm:text-base font-semibold text-[#121214] mt-0.5">
-                “High attention concentration around the subject correlates with stronger thumbnail performance across recent uploads.”
-              </p>
-              <p className="text-xs text-[#71717A] mt-1">
-                Observed across 12,000+ creator uploads analyzed over the last 90 days.
-              </p>
+            <h3 className="text-2xl font-bold text-white mb-3">YouTube Feed Simulator</h3>
+            <p className="text-gray-400 text-[15px] leading-relaxed mb-8">
+              Preview your thumbnail in a realistic YouTube feed. Test it against highly competitive videos to ensure your design cuts through the noise and commands attention.
+            </p>
+            <div className="mt-auto">
+              <a href="#" className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-black bg-white hover:bg-gray-100 rounded-full transition-colors w-max gap-2 group-hover:gap-3">
+                Explore <span>→</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="relative z-0 flex-1 h-[320px] md:h-auto overflow-hidden perspective-[1000px] flex items-center justify-end -mr-12 -mb-12 md:mb-0">
+            {/* Simulated YouTube Window */}
+            <div className="w-[480px] bg-[#0F0F0F] rounded-xl border border-white/10 shadow-2xl transform rotate-y-[-10deg] rotate-x-[5deg] group-hover:rotate-y-[-5deg] transition-transform duration-700">
+              
+              {/* YouTube Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div className="flex items-center gap-1.5 text-white font-bold text-sm">
+                  <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  YouTube
+                </div>
+                <div className="flex-1 max-w-[200px] mx-4 h-7 bg-[#222] rounded-full px-3 flex items-center text-[10px] text-gray-500 border border-white/10">
+                  Search
+                </div>
+                <div className="w-6 h-6 rounded-full bg-[#222]" />
+              </div>
+              
+              {/* Chips */}
+              <div className="px-4 py-2 border-b border-white/10 flex gap-2 overflow-hidden">
+                <div className="px-3 py-1 bg-white text-black rounded-lg text-[9px] font-bold">All</div>
+                <div className="px-3 py-1 bg-[#222] text-white rounded-lg text-[9px]">Gaming</div>
+                <div className="px-3 py-1 bg-[#222] text-white rounded-lg text-[9px]">Science</div>
+                <div className="px-3 py-1 bg-[#222] text-white rounded-lg text-[9px]">Space</div>
+                <div className="px-3 py-1 bg-[#222] text-white rounded-lg text-[9px]">Travel</div>
+                <div className="px-3 py-1 bg-[#222] text-white rounded-lg text-[9px]">Live</div>
+              </div>
+
+              {/* Video List */}
+              <div className="p-4 space-y-4">
+                {/* Video 1 (User's Thumbnail) */}
+                <div className="flex gap-3 items-start group/video">
+                  <div className="relative w-40 shrink-0 aspect-video rounded-lg overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                    <img src="/images/astronaut_thumb.jpg" className="w-full h-full object-cover group-hover/video:scale-105 transition-transform duration-500" />
+                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[8px] px-1 rounded">12:34</div>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-white text-xs font-bold leading-tight">Beyond The Limits</h4>
+                    <p className="text-gray-400 text-[10px]">1.2M views • 2 weeks ago</p>
+                  </div>
+                </div>
+                {/* Video 2 */}
+                <div className="flex gap-3 items-start opacity-50">
+                  <div className="relative w-40 shrink-0 aspect-video rounded-lg overflow-hidden bg-[#222]">
+                    <img src="/images/about_thumb1.jpg" className="w-full h-full object-cover" />
+                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[8px] px-1 rounded">10:21</div>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-white text-xs font-bold leading-tight">Japan's Secret City</h4>
+                    <p className="text-gray-400 text-[10px]">842K views • 1 month ago</p>
+                  </div>
+                </div>
+                {/* Video 3 */}
+                <div className="flex gap-3 items-start opacity-30">
+                  <div className="relative w-40 shrink-0 aspect-video rounded-lg overflow-hidden bg-[#222]">
+                    <img src="/images/hero_laptop.jpg" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-white text-xs font-bold leading-tight">The Future of Space</h4>
+                    <p className="text-gray-400 text-[10px]">320K views • 3 weeks ago</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

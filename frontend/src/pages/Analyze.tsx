@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Upload, Image as ImageIcon, X, RefreshCw, BarChart2, Eye, Layout, AlertCircle, ArrowRight, Activity, MousePointer2, UserSquare2, Type, TypeIcon, Image as ImagePlaceholder } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { AttentionBudget } from './AttentionBudget';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -160,33 +161,11 @@ export const Analyze: React.FC = () => {
       onComplete: () => {
         setAppState('results');
         
-        // Results entrance animation
         setTimeout(() => {
-          const ctx = gsap.context(() => {
-            gsap.fromTo('.analysis-canvas', { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' });
-            
-            // Stagger right panel elements
-            gsap.fromTo('.attention-summary, .insights-panel, .detection-summary, .attention-budget, .scan-preview, .quick-actions', 
-              { opacity: 0, x: 20 },
-              { opacity: 1, x: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
-            );
-
-            // Animate progress bars
-            gsap.fromTo('.attention-bar-fill',
-              { width: '0%' },
-              { width: (i, target) => target.dataset.width, duration: 1.2, ease: 'power3.out', delay: 0.5 }
-            );
-
-            // Animate heatmap opacity
-            gsap.fromTo('.analysis-heatmap', { opacity: 0 }, { opacity: 1, duration: 1.5, delay: 0.8 });
-            
-            // Annotations
-            gsap.fromTo('.attention-label', 
-              { opacity: 0, y: 10, scale: 0.9 },
-              { opacity: 1, y: 0, scale: 1, stagger: 0.15, duration: 0.6, delay: 1, ease: 'back.out(1.5)' }
-            );
-            
-          }, resultsContainerRef);
+          if (resultsContainerRef.current) {
+            gsap.set(resultsContainerRef.current, { clearProps: 'all' });
+            gsap.fromTo(resultsContainerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
+          }
         }, 50);
       }
     });
@@ -213,17 +192,18 @@ export const Analyze: React.FC = () => {
       
       <main className="pt-24 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
         
-        {/* Page Intro */}
-        <div className="analyze-header text-center max-w-3xl mx-auto mb-12">
-          <h1 className="analyze-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
-            See what viewers see first.
-          </h1>
-        </div>
+
 
         {/* Empty State */}
         {appState === 'empty' && (
-          <div 
-            ref={uploadZoneRef}
+          <div className="flex flex-col items-center w-full">
+            <div className="analyze-header text-center max-w-3xl mx-auto mb-10">
+              <h1 className="analyze-title text-4xl md:text-5xl font-bold tracking-tight text-[#121214] mb-4">
+                See what viewers see first.
+              </h1>
+            </div>
+            <div 
+              ref={uploadZoneRef}
             className={`upload-zone relative w-full max-w-4xl mx-auto h-[400px] border-2 border-dashed rounded-3xl transition-all duration-300 flex flex-col items-center justify-center overflow-hidden bg-white group
               ${isDragging ? 'border-[#8B5CF6] bg-purple-50/50' : 'border-[#E6E4DE] hover:border-[#D5D3CC]'}`}
             onDragOver={handleDragOver}
@@ -265,6 +245,7 @@ export const Analyze: React.FC = () => {
                 Try a sample thumbnail
               </button>
             </div>
+          </div>
           </div>
         )}
 
@@ -331,220 +312,25 @@ export const Analyze: React.FC = () => {
             </div>
           </div>
         )}
-
+        
         {/* Results State */}
         <div 
           ref={resultsContainerRef} 
-          className={`grid grid-cols-1 lg:grid-cols-3 gap-8 ${appState === 'results' ? 'block' : 'hidden'}`}
+          className={`w-full ${appState === 'results' ? 'block' : 'hidden'}`}
         >
-          {/* LEFT COLUMN: Analysis Canvas */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 p-1 bg-white border border-[#E6E4DE] rounded-xl shadow-sm">
+          {appState === 'results' && (
+             <div className="relative flex flex-col items-center w-full">
                 <button 
-                  onClick={() => setViewMode('original')}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${viewMode === 'original' ? 'bg-[#FAF9F5] text-[#121214] shadow-sm' : 'text-[#4A4950] hover:text-[#121214]'}`}
+                  onClick={replaceThumbnail}
+                  className="mb-4 z-50 px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
                 >
-                  Original
+                  <RefreshCw className="w-4 h-4" /> Analyze Another Thumbnail
                 </button>
-                <button 
-                  onClick={() => setViewMode('heatmap')}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${viewMode === 'heatmap' ? 'bg-[#8B5CF6] text-white shadow-sm' : 'text-[#4A4950] hover:text-[#121214]'}`}
-                >
-                  <Activity className="w-4 h-4" /> Heatmap
-                </button>
-                <button 
-                  onClick={() => setViewMode('scan')}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${viewMode === 'scan' ? 'bg-[#121214] text-white shadow-sm' : 'text-[#4A4950] hover:text-[#121214]'}`}
-                >
-                  <MousePointer2 className="w-4 h-4" /> Scan Path
-                </button>
-              </div>
-
-              <button 
-                onClick={replaceThumbnail}
-                className="text-sm font-semibold text-[#4A4950] hover:text-[#121214] transition-colors flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-4 h-4" /> Replace
-              </button>
-            </div>
-
-            <div className="analysis-canvas bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5">
-              <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center">
-                <img src={imagePreview!} alt="Thumbnail analyzed" className="analysis-thumbnail w-full h-full object-contain" />
-                
-                {/* Heatmap Overlay */}
-                {viewMode === 'heatmap' && (
-                  <>
-                    <div className="analysis-heatmap absolute inset-0 mix-blend-screen opacity-90 heatmap-glow-high" style={{ backgroundImage: 'radial-gradient(circle at 40% 30%, rgba(2ef,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at 70% 50%, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)' }}></div>
-                    
-                    {/* Floating Labels */}
-                    <div className="attention-label absolute top-[25%] left-[35%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
-                      <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-md text-xs font-bold text-[#121214] shadow-lg border border-white/20">FACE · 41%</div>
-                      <div className="w-1 h-8 border-l border-white/60 border-dashed"></div>
-                    </div>
-                    <div className="attention-label absolute top-[45%] left-[70%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
-                      <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-md text-xs font-bold text-[#121214] shadow-lg border border-white/20">TITLE · 28%</div>
-                      <div className="w-1 h-8 border-l border-white/60 border-dashed"></div>
-                    </div>
-                  </>
-                )}
-
-                {/* Scan Path Overlay */}
-                {viewMode === 'scan' && (
-                  <div className="absolute inset-0">
-                    <div className="absolute top-[30%] left-[40%] scan-point w-8 h-8 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-sm shadow-xl z-10 border-2 border-white">1</div>
-                    <div className="absolute top-[50%] left-[70%] scan-point w-8 h-8 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-sm shadow-xl z-10 border-2 border-white">2</div>
-                    <div className="absolute top-[70%] left-[20%] scan-point w-8 h-8 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-sm shadow-xl z-10 border-2 border-white">3</div>
-                    
-                    {/* Fake SVG lines for scan path */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
-                      <path d="M 40% 30% Q 55% 20% 70% 50%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="3" strokeDasharray="6 6" />
-                      <path d="M 70% 50% Q 45% 80% 20% 70%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="3" strokeDasharray="6 6" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Quick Actions (Desktop only shown here for flow, usually side or bottom) */}
-            <div className="quick-actions hidden lg:flex items-center gap-4 pt-4 border-t border-[#E6E4DE]">
-              <span className="text-sm font-semibold text-[#4A4950]">Quick actions:</span>
-              <button className="text-sm font-semibold text-[#121214] hover:text-[#8B5CF6] transition-colors" onClick={() => navigate('/compare')}>Compare Thumbnail</button>
-              <button className="text-sm font-semibold text-[#121214] hover:text-[#8B5CF6] transition-colors" onClick={() => navigate('/editor')}>Open Editor</button>
-              <button className="text-sm font-semibold text-[#121214] hover:text-[#8B5CF6] transition-colors" onClick={() => navigate('/analytics')}>View Analytics</button>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: Results Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            
-            {/* Attention Overview */}
-            <div className="attention-summary bg-white border border-[#E6E4DE] rounded-3xl p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-6 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-[#8B5CF6]" />
-                Attention Overview
-              </h3>
-              
-              <div className="flex items-end gap-3 mb-8">
-                <span className="attention-score text-6xl font-black text-[#121214] leading-none tracking-tighter">78</span>
-                <span className="text-sm font-semibold text-[#4A4950] pb-2">Attention Score</span>
-              </div>
-
-              <div className="space-y-4">
-                <div className="attention-bar-container">
-                  <div className="flex justify-between text-sm font-semibold mb-1.5">
-                    <span className="text-[#121214]">Face</span>
-                    <span className="text-[#8B5CF6]">41%</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden">
-                    <div className="attention-bar-fill h-full bg-[#8B5CF6] rounded-full" data-width="41%"></div>
-                  </div>
+                <div className="w-full">
+                  <AttentionBudget isEmbedded={true} imageUrl={imagePreview || undefined} />
                 </div>
-                <div className="attention-bar-container">
-                  <div className="flex justify-between text-sm font-semibold mb-1.5">
-                    <span className="text-[#121214]">Title</span>
-                    <span className="text-[#121214]">28%</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden">
-                    <div className="attention-bar-fill h-full bg-[#121214] rounded-full" data-width="28%"></div>
-                  </div>
-                </div>
-                <div className="attention-bar-container">
-                  <div className="flex justify-between text-sm font-semibold mb-1.5">
-                    <span className="text-[#121214]">Subject</span>
-                    <span className="text-[#8F8D98]">19%</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden">
-                    <div className="attention-bar-fill h-full bg-[#8F8D98] rounded-full" data-width="19%"></div>
-                  </div>
-                </div>
-                <div className="attention-bar-container">
-                  <div className="flex justify-between text-sm font-semibold mb-1.5">
-                    <span className="text-[#121214]">Background</span>
-                    <span className="text-[#8F8D98]">12%</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden">
-                    <div className="attention-bar-fill h-full bg-[#D5D3CC] rounded-full" data-width="12%"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Insights */}
-            <div className="insights-panel bg-white border border-[#E6E4DE] rounded-3xl p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-4">AI Insights</h3>
-              
-              <div className="space-y-3">
-                <div className="insight-item p-3.5 bg-[#FAF9F5] border border-[#E6E4DE] rounded-xl flex gap-3">
-                  <UserSquare2 className="w-5 h-5 text-[#8B5CF6] shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs font-bold text-[#4A4950] uppercase block mb-1">ANCHOR</span>
-                    <p className="text-sm font-medium text-[#121214] leading-snug">Your face is the strongest visual anchor and successfully captures immediate attention.</p>
-                  </div>
-                </div>
-                <div className="insight-item p-3.5 bg-[#FAF9F5] border border-[#E6E4DE] rounded-xl flex gap-3">
-                  <TypeIcon className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs font-bold text-[#4A4950] uppercase block mb-1">COMPETITION</span>
-                    <p className="text-sm font-medium text-[#121214] leading-snug">The title has strong visibility but competes slightly with the secondary subject.</p>
-                  </div>
-                </div>
-                <div className="insight-item p-3.5 bg-[#FAF9F5] border border-[#E6E4DE] rounded-xl flex gap-3">
-                  <ArrowRight className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs font-bold text-[#4A4950] uppercase block mb-1">DIRECTION</span>
-                    <p className="text-sm font-medium text-[#121214] leading-snug">The directional cues successfully guide attention toward the main message.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Detection Summary */}
-            <div className="detection-summary bg-white border border-[#E6E4DE] rounded-3xl p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-4">Detected Elements</h3>
-              <div className="space-y-3">
-                <div className="detection-row flex items-center justify-between py-1 border-b border-[#E6E4DE]/50">
-                  <span className="text-sm font-semibold text-[#121214] flex items-center gap-2"><UserSquare2 className="w-4 h-4 text-[#8F8D98]" /> Faces</span>
-                  <span className="text-sm font-bold bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E6E4DE]">2</span>
-                </div>
-                <div className="detection-row flex items-center justify-between py-1 border-b border-[#E6E4DE]/50">
-                  <span className="text-sm font-semibold text-[#121214] flex items-center gap-2"><Type className="w-4 h-4 text-[#8F8D98]" /> Text Blocks</span>
-                  <span className="text-sm font-bold bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E6E4DE]">3</span>
-                </div>
-                <div className="detection-row flex items-center justify-between py-1 border-b border-[#E6E4DE]/50">
-                  <span className="text-sm font-semibold text-[#121214] flex items-center gap-2"><ImagePlaceholder className="w-4 h-4 text-[#8F8D98]" /> Subjects</span>
-                  <span className="text-sm font-bold bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E6E4DE]">4</span>
-                </div>
-                <div className="detection-row flex items-center justify-between py-1">
-                  <span className="text-sm font-semibold text-[#121214] flex items-center gap-2"><ArrowRight className="w-4 h-4 text-[#8F8D98]" /> Directional Cues</span>
-                  <span className="text-sm font-bold bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E6E4DE]">2</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Scan Path & Attention Budget Links */}
-            <div className="space-y-4">
-              <button 
-                onClick={() => navigate('/attention-budget')}
-                className="attention-budget w-full p-4 bg-[#121214] text-white rounded-2xl flex items-center justify-between group hover:bg-[#25252A] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <BarChart2 className="w-5 h-5 text-[#8B5CF6]" />
-                  <span className="font-semibold text-sm">View Full Attention Budget</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-[#8F8D98] group-hover:text-white transition-colors group-hover:translate-x-1" />
-              </button>
-            </div>
-            
-            {/* Quick Actions Mobile */}
-            <div className="lg:hidden quick-actions flex flex-wrap gap-3 pt-2">
-               <button className="px-4 py-2 bg-white border border-[#E6E4DE] rounded-xl text-sm font-semibold text-[#121214]" onClick={() => navigate('/compare')}>Compare</button>
-               <button className="px-4 py-2 bg-white border border-[#E6E4DE] rounded-xl text-sm font-semibold text-[#121214]" onClick={() => navigate('/editor')}>Editor</button>
-               <button className="px-4 py-2 bg-white border border-[#E6E4DE] rounded-xl text-sm font-semibold text-[#121214]" onClick={() => navigate('/analytics')}>Analytics</button>
-            </div>
-
-          </div>
+             </div>
+          )}
         </div>
       </main>
     </div>

@@ -20,7 +20,6 @@ export const AppNavbar: React.FC = () => {
 
   const navItems = [
     { name: 'Analyze', path: '/analyze' },
-    { name: 'Attention Budget', path: '/attention-budget' },
     { name: 'Compare', path: '/compare' },
     { name: 'Analytics', path: '/analytics' },
   ];
