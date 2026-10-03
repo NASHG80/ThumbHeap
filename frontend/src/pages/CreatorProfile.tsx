@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
 import { useAuth } from '../context/AuthContext';
 import {
-  User, Youtube, Target, Users, BarChart2, Zap,
+  User, PlayCircle, Target, Users, BarChart2, Zap,
   ChevronRight, ChevronLeft, Check, Loader2, Save, ArrowLeft
 } from 'lucide-react';
 
@@ -70,7 +70,7 @@ function Chips({
 
 // ─── Step configs ──────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 'identity', label: 'Channel',  icon: Youtube   },
+  { id: 'identity', label: 'Channel',  icon: PlayCircle },
   { id: 'content',  label: 'Content',  icon: Zap       },
   { id: 'audience', label: 'Audience', icon: Users     },
   { id: 'stats',    label: 'Stats',    icon: BarChart2  },

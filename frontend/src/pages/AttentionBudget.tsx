@@ -33,7 +33,6 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
   
   const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [intent, setIntent] = useState<string>('Face');
 
   // Use real Groq data when available, fall back to hardcoded
   const budgetData = insights?.attention_budget ?? FALLBACK_BUDGET;
@@ -50,6 +49,10 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
     { category: 'Composition', text: 'Consider increasing separation between the face and headline to avoid visual crowding.' },
     { category: 'Hierarchy',   text: 'Your primary subject already receives strong predicted attention—no changes needed there.' },
   ];
+
+  // Top 3 budget categories used as intent toggle buttons — derived from real data
+  const topCategories = budgetData.slice(0, 3).map((d: { name: string }) => d.name);
+  const [intent, setIntent] = useState<string>(topCategories[0] ?? 'Face');
 
   useEffect(() => {
     // Only run animations if user hasn't requested reduced motion
@@ -324,10 +327,10 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <span className="text-sm font-medium text-[#4A4950]">What should viewers notice first?</span>
               <div className="flex gap-2 bg-[#FAF9F5] p-1 rounded-xl border border-[#E6E4DE]">
-                {['Face', 'Title', 'Product'].map((cat) => (
+                {topCategories.map((cat) => (
                   <button 
                     key={cat}
-                    onClick={() => setIntent(cat as Category)}
+                    onClick={() => setIntent(cat)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${intent === cat ? 'bg-white text-[#121214] shadow-sm border border-[#E6E4DE]' : 'text-[#8F8D98] hover:text-[#121214]'}`}
                   >
                     {cat}
@@ -349,18 +352,22 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
               <div className="flex-1 space-y-4">
                 <div className="text-xs font-bold text-[#8F8D98] uppercase tracking-wide">PREDICTED ATTENTION</div>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm"><span className="font-semibold text-[#121214]">Face</span><span className="text-[#121214] font-bold">41%</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#4A4950]">Title</span><span className="text-[#4A4950] font-bold">28%</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#4A4950]">Subject</span><span className="text-[#8F8D98] font-bold">19%</span></div>
+                  {budgetData.slice(0, 3).map((item: { name: string; percentage: number }, i: number) => (
+                    <div key={item.name} className="flex justify-between text-sm">
+                      <span className={i === 0 ? 'font-semibold text-[#121214]' : 'text-[#4A4950]'}>{item.name}</span>
+                      <span className={`font-bold ${i === 0 ? 'text-[#121214]' : i === 1 ? 'text-[#4A4950]' : 'text-[#8F8D98]'}`}>{item.percentage}%</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
             
             <div className="intent-result mt-6 p-4 bg-purple-50/50 border border-purple-100 rounded-xl">
               <p className="text-sm font-medium text-[#121214] leading-relaxed">
-                {intent === 'Face' ? 
-                  "Your predicted attention is beautifully aligned with your primary subject (Face), but the title is competing closely for second place." : 
-                  `Your intended focus (${intent}) isn't receiving the most predicted attention. Consider increasing its contrast or scale to overtake the Face.`}
+                {budgetData[0]?.name === intent
+                  ? `Your predicted attention is aligned with your primary subject (${intent}), which captures ${budgetData[0]?.percentage}% of attention. ${largestCompetitor !== intent ? `Watch out for ${largestCompetitor} competing closely.` : ''}`
+                  : `Your intended focus (${intent}) isn't receiving the most predicted attention — ${budgetData[0]?.name} dominates at ${budgetData[0]?.percentage}%. Consider increasing ${intent}'s contrast or scale.`
+                }
               </p>
             </div>
           </div>

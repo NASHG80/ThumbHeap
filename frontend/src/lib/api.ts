@@ -89,3 +89,17 @@ export async function getThumbnails(token: string) {
   if (!res.ok) throw new Error('Could not load history.');
   return res.json();
 }
+
+/** POST /api/insights/{id} — generate AI insights on demand */
+export async function generateAIInsights(thumbnailId: string, token: string): Promise<AnalysisInsights> {
+  const res = await fetch(`${API_BASE}/api/insights/${thumbnailId}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Failed to generate AI insights.');
+  }
+  const data = await res.json();
+  return data.insights;
+}

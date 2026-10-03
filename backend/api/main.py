@@ -189,6 +189,20 @@ async def analyze_thumbnail(file: UploadFile = File(...), user_id: str = Depends
         logger.error(f"Cloudinary overlay upload failed: {exc}")
         overlay_url = None   # Non-fatal; numeric result is still valid
 
+    # ── Calculate Real Heatmap Stats ─────────────────────────────────────────
+    heatmap = result.get("heatmap_array")
+    attn_mean = 0.0
+    attn_concentration = 0.0
+    attn_peak = 0.0
+    if heatmap is not None:
+        try:
+            import numpy as np
+            attn_mean = float(np.mean(heatmap))
+            attn_concentration = float(np.mean(heatmap > 0.4))
+            attn_peak = float(np.max(heatmap))
+        except Exception:
+            pass
+
     # ── Persist metadata in existing thumbnails collection ──────────────────
     detections = result["detections"]
     try:
@@ -203,17 +217,18 @@ async def analyze_thumbnail(file: UploadFile = File(...), user_id: str = Depends
                 "faces_detected":   detections["faces"],
                 "objects_detected": detections["objects"],
             },
+            "attention_stats": {
+                "mean": attn_mean,
+                "concentration": attn_concentration,
+                "peak": attn_peak,
+            }
         }).inserted_id
     except Exception as exc:
         logger.error(f"MongoDB insert failed: {exc}")
         raise HTTPException(status_code=500, detail="Result storage failed.")
 
-    # ── Generate AI insights via Groq (non-blocking — failure does NOT fail request) ──
+    # AI insights are no longer generated automatically; they are triggered on-demand via a separate endpoint.
     insights = None
-    try:
-        insights = generate_insights(detections, heatmap=result.get("heatmap_array"))
-    except Exception as exc:
-        logger.warning(f"Groq insights skipped: {exc}")
 
     return {
         "id":          str(doc_id),
@@ -229,6 +244,41 @@ def get_thumbnails(user_id: str = Depends(get_current_user)):
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return {"thumbnails": docs}
+
+@app.post("/api/insights/{thumbnail_id}")
+def generate_insights_for_thumbnail(thumbnail_id: str, user_id: str = Depends(get_current_user)):
+    from bson import ObjectId
+    try:
+        doc = thumbnails_col.find_one({"_id": ObjectId(thumbnail_id), "user_id": user_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Thumbnail not found")
+            
+        detections = {
+            "texts": doc.get("ai_scores", {}).get("texts_detected", 0),
+            "faces": doc.get("ai_scores", {}).get("faces_detected", 0),
+            "objects": doc.get("ai_scores", {}).get("objects_detected", 0),
+        }
+        
+        # Call groq_insights with the image URLs and pre-calculated stats
+        insights = generate_insights(
+            detections=detections,
+            original_url=doc.get("cloudinary_url"),
+            overlay_url=doc.get("overlay_url"),
+            stats=doc.get("attention_stats", {})
+        )
+        
+        if insights:
+            # Optionally save insights to DB for future retrieval
+            thumbnails_col.update_one({"_id": ObjectId(thumbnail_id)}, {"$set": {"insights": insights}})
+            return {"insights": insights}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate AI insights")
+            
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Error generating insights: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to generate insights")
 
 
 # ── Creator Profile ──────────────────────────────────────────────────────────

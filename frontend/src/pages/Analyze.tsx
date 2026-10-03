@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
 import { useAuth } from '../context/AuthContext';
 import {
-  Upload, RefreshCw, Activity, AlertCircle, Eye, LayoutGrid,
+  Upload, RefreshCw, Activity, AlertCircle, Eye, LayoutGrid, Brain,
   MessageSquare, Lightbulb, Users, Type, Package, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { AttentionBudget } from './AttentionBudget';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { analyzeImage } from '../lib/api';
+import { analyzeImage, generateAIInsights } from '../lib/api';
 import type { AnalysisResult } from '../lib/api';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -552,15 +552,44 @@ export const Analyze: React.FC = () => {
           {appState === 'results' && analysisResult && (
             <div className="relative flex flex-col items-center w-full gap-6">
 
-              {/* Reset button */}
-              <button
-                onClick={resetToEmpty}
-                className="z-50 px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold
-                           hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Analyse Another Thumbnail
-              </button>
+              <div className="flex gap-4 z-50">
+                {/* Reset button */}
+                <button
+                  onClick={resetToEmpty}
+                  className="px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold
+                             hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Analyse Another Thumbnail
+                </button>
+                
+                {/* AI Insights trigger button */}
+                {!analysisResult.insights && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        if (!token) throw new Error("Not authenticated");
+                        
+                        const btn = document.getElementById('ai-btn') as HTMLButtonElement | null;
+                        if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+                        
+                        const insights = await generateAIInsights(analysisResult.id, token);
+                        setAnalysisResult(prev => prev ? { ...prev, insights } : null);
+                      } catch (err: any) {
+                        alert(err.message || "AI Insights are temporarily unavailable.");
+                        const btn = document.getElementById('ai-btn') as HTMLButtonElement | null;
+                        if (btn) { btn.textContent = 'Generate AI Analysis'; btn.disabled = false; }
+                      }
+                    }}
+                    id="ai-btn"
+                    className="px-6 py-2.5 bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white rounded-full text-sm font-bold
+                               hover:shadow-lg hover:shadow-[#8B5CF6]/20 transition-all flex items-center gap-2"
+                  >
+                    <Brain className="w-4 h-4" />
+                    Generate AI Analysis
+                  </button>
+                )}
+              </div>
 
               {/* Full AttentionBudget analytics page with real heatmap overlay */}
               <div className="w-full">
