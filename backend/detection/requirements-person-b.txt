@@ -1,0 +1,12 @@
+# Person B Detection Pipeline Core Dependencies
+# Extracted from .venv-person-b
+
+paddlepaddle==3.0.0
+paddleocr==3.0.0
+torch==2.4.1
+torchvision==0.19.1
+ultralytics==8.4.171
+opencv-python
+# Note: opencv-contrib-python==4.10.0.84 is installed but SHADOWED by opencv-python 5.0.0. 
+# cv2.__version__ reports 5.0.0. opencv-contrib-python can be safely ignored/removed.
+numpy==1.24.4
