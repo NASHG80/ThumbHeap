@@ -79,20 +79,30 @@ coverage/
 # Virtual environments
 .venv*/
 backend/.venv*/
+backend/person_c/.venv-c/
+backend/.venv-person-b/
 
 # Data directories (images, heatmaps, processed data)
 backend/data/
 backend/person_c/data/
+backend/person_c/data/raw/osie/
+backend/person_c/data/processed/osie/
 frontend/public/images/
 frontend/public/thumbnails/
+backend/testimage/
 
 # Model weights and checkpoints
 *.pth
 *.pt
+*.onnx
+*.npy
 backend/models/transalnet/pretrained_models/
 backend/fusion/checkpoints/
+backend/models/
+backend/weights/
 
 # Outputs and scripts
 backend/outputs/
 backend/fusion/results/
+backend/person_c/outputs/
 validate_heatmaps_quick.py
