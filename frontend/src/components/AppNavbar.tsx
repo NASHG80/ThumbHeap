@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, User, Accessibility } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -9,6 +9,7 @@ export const AppNavbar: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -181,9 +182,13 @@ export const AppNavbar: React.FC = () => {
 
             {isAuthenticated ? (
               <>
-                <div className="w-8 h-8 rounded-full bg-[#121214] text-white flex items-center justify-center font-bold text-xs">
+                <button
+                  onClick={() => navigate('/profile')}
+                  title="Creator Profile"
+                  className="w-8 h-8 rounded-full bg-[#121214] text-white flex items-center justify-center font-bold text-xs hover:bg-[#7C3AED] transition-colors cursor-pointer"
+                >
                   Me
-                </div>
+                </button>
                 <button onClick={logout} className="flex items-center justify-center w-8 h-8 rounded-full text-[#4A4950] hover:text-red-500 hover:bg-red-50 transition-colors">
                   <LogOut className="w-4 h-4" />
                 </button>

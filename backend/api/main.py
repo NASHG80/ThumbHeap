@@ -59,6 +59,7 @@ client = MongoClient(MONGO_URI)
 db = client.thumbheap
 users_col = db.users
 thumbnails_col = db.thumbnails
+profiles_col = db.creator_profiles
 
 import bcrypt
 
@@ -219,6 +220,65 @@ def get_thumbnails(user_id: str = Depends(get_current_user)):
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return {"thumbnails": docs}
+
+
+# ── Creator Profile ──────────────────────────────────────────────────────────
+
+from typing import List, Optional
+
+class CreatorProfile(BaseModel):
+    # Channel identity
+    channel_name: Optional[str] = None
+    channel_url: Optional[str] = None
+
+    # Content type
+    video_category: Optional[str] = None          # e.g. "Education", "Gaming", "Vlog"
+    video_types: Optional[List[str]] = []         # e.g. ["Tutorials", "Reviews", "Shorts"]
+    niche_description: Optional[str] = None       # free-text niche
+
+    # Audience
+    target_age_groups: Optional[List[str]] = []   # e.g. ["13-17", "18-24", "25-34"]
+    target_genders: Optional[List[str]] = []      # e.g. ["Male", "Female", "All"]
+    audience_regions: Optional[List[str]] = []    # e.g. ["India", "USA", "Global"]
+
+    # Channel stats & habits
+    channel_size: Optional[str] = None            # e.g. "<1K", "1K-10K", "10K-100K", "100K+"
+    upload_frequency: Optional[str] = None        # e.g. "Daily", "Weekly", "Bi-weekly"
+    avg_video_length: Optional[str] = None        # e.g. "<5 min", "5-15 min", "15-30 min", "30+ min"
+
+    # Goals
+    primary_goal: Optional[str] = None            # e.g. "Grow subscribers", "Monetise", "Brand awareness"
+    biggest_challenge: Optional[str] = None       # e.g. "Low CTR", "Watch time", "Thumbnail design"
+
+    # Thumbnail style preferences
+    thumbnail_style: Optional[List[str]] = []     # e.g. ["Face-forward", "Text-heavy", "Minimalist"]
+    color_preference: Optional[str] = None        # e.g. "Bright", "Dark", "Neutral"
+
+
+@app.get("/api/profile")
+def get_profile(user_id: str = Depends(get_current_user)):
+    """Return the creator profile for the authenticated user."""
+    profile = profiles_col.find_one({"user_id": user_id})
+    if not profile:
+        return {"profile": None}
+    profile["_id"] = str(profile["_id"])
+    return {"profile": profile}
+
+
+@app.put("/api/profile")
+def upsert_profile(data: CreatorProfile, user_id: str = Depends(get_current_user)):
+    """Create or update the creator profile for the authenticated user."""
+    payload = data.dict()
+    payload["user_id"] = user_id
+    payload["updated_at"] = datetime.datetime.utcnow()
+
+    profiles_col.update_one(
+        {"user_id": user_id},
+        {"$set": payload},
+        upsert=True
+    )
+    return {"message": "Profile saved successfully"}
+
 
 if __name__ == "__main__":
     import uvicorn
