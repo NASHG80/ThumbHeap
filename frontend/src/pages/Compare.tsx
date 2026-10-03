@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
-import { Upload, X, Activity, Layers, MousePointer2, Smartphone, Monitor, ChevronRight, Zap, Target, Layout, ShieldAlert } from 'lucide-react';
+import { Upload, X, Activity, MousePointer2, Smartphone, Monitor, ChevronRight, Zap, Target } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -11,7 +11,7 @@ type ViewMode = 'original' | 'heatmap' | 'scan';
 type FeedScale = 'desktop' | 'mobile';
 
 interface Variant {
-  id: 'A' | 'B' | 'C';
+  id: 'A' | 'B';
   image: string;
   score: number;
   face: number;
@@ -23,21 +23,22 @@ interface Variant {
 const mockVariants: Record<string, Variant> = {
   A: { id: 'A', image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80', score: 78, face: 41, title: 28, subject: 19, bg: 7 },
   B: { id: 'B', image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80&grayscale=true', score: 71, face: 32, title: 34, subject: 22, bg: 8 },
-  C: { id: 'C', image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80&sepia=true', score: 82, face: 38, title: 30, subject: 21, bg: 6 }
 };
 
 export const Compare: React.FC = () => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const [variants, setVariants] = useState<Partial<Record<'A' | 'B' | 'C', string>>>({});
+  const [variants, setVariants] = useState<Partial<Record<'A' | 'B', string>>>({});
   const [isComparing, setIsComparing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
-  const [independentMode, setIndependentMode] = useState(false);
   const [feedScale, setFeedScale] = useState<FeedScale>('desktop');
-  const [activeFeedVariant, setActiveFeedVariant] = useState<'A' | 'B' | 'C'>('A');
+  const [activeFeedVariant, setActiveFeedVariant] = useState<'A' | 'B'>('A');
   const [showFeedHeatmap, setShowFeedHeatmap] = useState(false);
+
+  const fileInputRefA = useRef<HTMLInputElement>(null);
+  const fileInputRefB = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -69,12 +70,6 @@ export const Compare: React.FC = () => {
         { opacity: 0, x: 50 },
         { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out', delay: 0.3 }
       );
-      if (variants.C) {
-        gsap.fromTo('.battle-card:nth-child(3)',
-          { opacity: 0, y: 50 },
-          { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.4 }
-        );
-      }
 
       // CHARTS & BARS
       ScrollTrigger.create({
@@ -83,7 +78,7 @@ export const Compare: React.FC = () => {
         onEnter: () => {
           gsap.fromTo('.comparison-bar',
             { width: '0%' },
-            { width: (i, target) => target.dataset.width, duration: 1.2, ease: 'power3.out', stagger: 0.05 }
+            { width: (_, target) => target.dataset.width, duration: 1.2, ease: 'power3.out', stagger: 0.05 }
           );
         },
         once: true
@@ -132,17 +127,30 @@ export const Compare: React.FC = () => {
     }, pageRef);
 
     return () => ctx.revert();
-  }, [isComparing, variants.C]);
+  }, [isComparing]);
 
-  const handleUpload = (id: 'A' | 'B' | 'C') => {
-    // Mock upload
-    setVariants(prev => ({ ...prev, [id]: mockVariants[id].image }));
+  const handleUploadClick = (id: 'A' | 'B') => {
+    if (id === 'A') fileInputRefA.current?.click();
+    if (id === 'B') fileInputRefB.current?.click();
   };
 
-  const removeVariant = (id: 'A' | 'B' | 'C', e: React.MouseEvent) => {
+  const handleFileChange = (id: 'A' | 'B', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setVariants(prev => ({ ...prev, [id]: url }));
+    }
+    // reset input value so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const removeVariant = (id: 'A' | 'B', e: React.MouseEvent) => {
     e.stopPropagation();
     setVariants(prev => {
       const newVars = { ...prev };
+      if (newVars[id] && newVars[id]!.startsWith('blob:')) {
+        URL.revokeObjectURL(newVars[id]!);
+      }
       delete newVars[id];
       return newVars;
     });
@@ -167,23 +175,30 @@ export const Compare: React.FC = () => {
   };
 
   const canCompare = variants.A && variants.B;
-  const activeKeys = Object.keys(variants).sort() as ('A' | 'B' | 'C')[];
+  const activeKeys = Object.keys(variants).sort() as ('A' | 'B')[];
 
-  const renderUploadSlot = (id: 'A' | 'B' | 'C', title: string, isOptional: boolean = false) => {
+  const renderUploadSlot = (id: 'A' | 'B', title: string, isOptional: boolean = false) => {
     const hasImage = !!variants[id];
 
     return (
       <div
         className={`upload-slot relative aspect-video border-2 ${hasImage ? 'border-[#8B5CF6] border-solid' : 'border-dashed border-[#E6E4DE] hover:border-[#D5D3CC]'} rounded-3xl transition-all duration-300 flex flex-col items-center justify-center overflow-hidden bg-white group cursor-pointer`}
-        onClick={() => !hasImage && handleUpload(id)}
+        onClick={() => !hasImage && handleUploadClick(id)}
       >
+        <input 
+          type="file" 
+          ref={id === 'A' ? fileInputRefA : fileInputRefB} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={(e) => handleFileChange(id, e)} 
+        />
         {hasImage ? (
           <>
             <img src={variants[id]} alt={title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-3 backdrop-blur-[2px]">
               <span className="text-white font-bold tracking-wider">{title}</span>
               <div className="flex gap-2">
-                <button onClick={(e) => { e.stopPropagation(); handleUpload(id); }} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold backdrop-blur-md transition-colors">Replace</button>
+                <button onClick={(e) => { e.stopPropagation(); handleUploadClick(id); }} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold backdrop-blur-md transition-colors">Replace</button>
                 <button onClick={(e) => removeVariant(id, e)} className="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors"><X className="w-5 h-5" /></button>
               </div>
             </div>
@@ -206,7 +221,7 @@ export const Compare: React.FC = () => {
     );
   };
 
-  const renderVariantAnalysis = (id: 'A' | 'B' | 'C') => {
+  const renderVariantAnalysis = (id: 'A' | 'B') => {
     const data = mockVariants[id];
     if (!data || !variants[id]) return null;
 
@@ -221,34 +236,29 @@ export const Compare: React.FC = () => {
         </div>
 
         <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center mb-6">
-          <img src={data.image} alt={`Variant ${id}`} className={`battle-thumbnail w-full h-full object-cover ${id === 'B' ? 'grayscale' : ''} ${id === 'C' ? 'sepia' : ''}`} />
+          <img src={data.image} alt={`Variant ${id}`} className={`battle-thumbnail w-full h-full object-cover ${id === 'B' ? 'grayscale' : ''}`} />
 
           {/* Heatmap Overlay */}
           {viewMode === 'heatmap' && (
-            <div className="battle-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: `radial-gradient(circle at ${id === 'A' ? '40% 30%' : id === 'B' ? '50% 20%' : '30% 40%'}, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at ${id === 'A' ? '70% 50%' : id === 'B' ? '60% 60%' : '80% 40%'}, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)` }}></div>
+            <div className="battle-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: `radial-gradient(circle at ${id === 'A' ? '40% 30%' : '50% 20%'}, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at ${id === 'A' ? '70% 50%' : '60% 60%'}, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)` }}></div>
           )}
 
           {/* Scan Path Overlay */}
           {viewMode === 'scan' && (
             <div className="battle-scan-path absolute inset-0">
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[30%] left-[40%]' : id === 'B' ? 'top-[20%] left-[50%]' : 'top-[40%] left-[30%]'}`}>1</div>
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[50%] left-[70%]' : id === 'B' ? 'top-[60%] left-[60%]' : 'top-[40%] left-[80%]'}`}>2</div>
-              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[70%] left-[20%]' : id === 'B' ? 'top-[80%] left-[30%]' : 'top-[70%] left-[20%]'}`}>3</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[30%] left-[40%]' : 'top-[20%] left-[50%]'}`}>1</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[50%] left-[70%]' : 'top-[60%] left-[60%]'}`}>2</div>
+              <div className={`absolute w-7 h-7 bg-[#8B5CF6] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xl z-10 border-2 border-white ${id === 'A' ? 'top-[70%] left-[20%]' : 'top-[80%] left-[30%]'}`}>3</div>
               <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
                 {id === 'A' ? (
                   <>
                     <path d="M 40% 30% Q 55% 20% 70% 50%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
                     <path d="M 70% 50% Q 45% 80% 20% 70%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
                   </>
-                ) : id === 'B' ? (
+                ) : (
                   <>
                     <path d="M 50% 20% Q 65% 30% 60% 60%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
                     <path d="M 60% 60% Q 45% 80% 30% 80%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
-                  </>
-                ) : (
-                  <>
-                    <path d="M 30% 40% Q 55% 20% 80% 40%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
-                    <path d="M 80% 40% Q 45% 80% 20% 70%" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeDasharray="6 6" />
                   </>
                 )}
               </svg>
@@ -283,10 +293,9 @@ export const Compare: React.FC = () => {
             </h1>
           </div>
 
-          <div className="upload-grid grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto w-full mb-12">
+          <div className="upload-grid grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full mb-12">
             {renderUploadSlot('A', 'Thumbnail A')}
             {renderUploadSlot('B', 'Thumbnail B')}
-            {renderUploadSlot('C', 'Thumbnail C', true)}
           </div>
 
           <div className="compare-button-container flex flex-col items-center mt-auto pb-10">
@@ -351,7 +360,7 @@ export const Compare: React.FC = () => {
                 { label: 'Text', keys: ['title'] },
                 { label: 'Subject', keys: ['subject'] },
                 { label: 'Background', keys: ['bg'] },
-              ].map((row, i) => (
+              ].map((row) => (
                 <div key={row.label} className="flex items-center border-b border-[#E6E4DE]/50 pb-4">
                   <div className="w-32 shrink-0 font-semibold text-[#121214]">{row.label}</div>
                   <div className="flex-1 grid gap-4" style={{ gridTemplateColumns: `repeat(${activeKeys.length}, minmax(0, 1fr))` }}>
@@ -394,17 +403,6 @@ export const Compare: React.FC = () => {
                   <p className="text-sm font-medium text-[#121214]">Variant B creates stronger headline prominence, drawing attention away from the subject.</p>
                 </div>
               </div>
-              {variants.C && (
-                <div className="comparison-insight bg-white p-6 rounded-3xl border border-[#E6E4DE] flex gap-4 shadow-sm hover:shadow-md transition-shadow md:col-span-2">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                    <ShieldAlert className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#8F8D98] uppercase tracking-wider block mb-1">Balance</span>
-                    <p className="text-sm font-medium text-[#121214]">Variant C distributes attention more evenly across subject and text, achieving the highest overall concentration score.</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -485,7 +483,7 @@ export const Compare: React.FC = () => {
                   <div className="feed-item feed-target flex flex-col gap-3 relative">
                     <div className="absolute -inset-4 bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 rounded-2xl -z-10 animate-pulse"></div>
                     <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden shadow-2xl shadow-purple-900/20">
-                      <img src={mockVariants[activeFeedVariant].image} alt="Your Variant" className={`w-full h-full object-cover transition-all duration-500 ${activeFeedVariant === 'B' ? 'grayscale' : ''} ${activeFeedVariant === 'C' ? 'sepia' : ''}`} />
+                      <img src={mockVariants[activeFeedVariant].image} alt="Your Variant" className={`w-full h-full object-cover transition-all duration-500 ${activeFeedVariant === 'B' ? 'grayscale' : ''}`} />
                       <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">8:42</span>
 
                       {showFeedHeatmap && (
