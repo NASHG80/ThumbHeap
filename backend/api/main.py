@@ -14,12 +14,13 @@ import cloudinary.uploader
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 import api.inference_service as inference_service
+from api.groq_insights import generate_insights
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -206,11 +207,19 @@ async def analyze_thumbnail(file: UploadFile = File(...), user_id: str = Depends
         logger.error(f"MongoDB insert failed: {exc}")
         raise HTTPException(status_code=500, detail="Result storage failed.")
 
+    # ── Generate AI insights via Groq (non-blocking — failure does NOT fail request) ──
+    insights = None
+    try:
+        insights = generate_insights(detections, heatmap=result.get("heatmap_array"))
+    except Exception as exc:
+        logger.warning(f"Groq insights skipped: {exc}")
+
     return {
         "id":          str(doc_id),
         "url":         original_url,
         "overlay_url": overlay_url,
         "detections":  detections,
+        "insights":    insights,
     }
 
 @app.get("/api/thumbnails")

@@ -1,36 +1,55 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
-import { BarChart2, Activity, Target, Layers, Brain, Zap, AlertTriangle, Lightbulb, ArrowRight, MousePointer2, PieChart } from 'lucide-react';
+import { BarChart2, Activity, Target, Brain, AlertTriangle, Lightbulb, ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { AnalysisInsights } from '../lib/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
-type ViewMode = 'original' | 'heatmap' | 'regions';
-type Category = 'Face' | 'Title' | 'Subject' | 'Background' | 'Logo' | 'Directional Cue';
+type ViewMode = 'original' | 'heatmap';
 
-const budgetData = [
-  { name: 'Face', percentage: 41, insight: 'Large facial features and high contrast make this the dominant visual anchor.' },
-  { name: 'Title', percentage: 28, insight: 'The headline has strong visual weight because of its size and contrast.' },
-  { name: 'Subject', percentage: 19, insight: 'The central subject receives significant attention due to its scale and placement.' },
+// Fallback hardcoded data used only when Groq insights are unavailable
+const FALLBACK_BUDGET = [
+  { name: 'Face',     percentage: 41, insight: 'Large facial features and high contrast make this the dominant visual anchor.' },
+  { name: 'Title',    percentage: 28, insight: 'The headline has strong visual weight because of its size and contrast.' },
+  { name: 'Subject',  percentage: 19, insight: 'The central subject receives significant attention due to its scale and placement.' },
   { name: 'Background', percentage: 7, insight: 'Background elements contribute moderate visual activity but relatively little semantic attention.' },
-  { name: 'Logo', percentage: 3, insight: 'The logo remains visually recognizable but occupies limited attention.' },
-  { name: 'Directional Cue', percentage: 2, insight: 'Subtle arrows successfully direct attention without stealing focus.' }
-] as const;
+  { name: 'Logo',     percentage: 3,  insight: 'The logo remains visually recognizable but occupies limited attention.' },
+  { name: 'Other',    percentage: 2,  insight: 'Subtle compositional elements direct attention without stealing focus.' },
+];
 
 interface AttentionBudgetProps {
   isEmbedded?: boolean;
   imageUrl?: string;
+  overlayUrl?: string | null;
+  insights?: AnalysisInsights | null;
 }
 
-export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = false, imageUrl }) => {
+export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = false, imageUrl, overlayUrl, insights }) => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
   
   const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [intent, setIntent] = useState<Category>('Face');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [intent, setIntent] = useState<string>('Face');
+
+  // Use real Groq data when available, fall back to hardcoded
+  const budgetData = insights?.attention_budget ?? FALLBACK_BUDGET;
+  const attentionScore = insights?.attention_score ?? 78;
+  const attentionEfficiency = insights?.attention_efficiency ?? 82;
+  const attentionLeakage = insights?.attention_leakage ?? 7;
+  const primaryAttention = insights?.primary_attention ?? 'Face + Title';
+  const strongestAnchor = insights?.strongest_anchor ?? 'Face';
+  const largestCompetitor = insights?.largest_competitor ?? 'Title';
+  const potentialDistraction = insights?.potential_distraction ?? 'Background';
+  const alignmentRating = insights?.alignment ?? 'High';
+  const recommendations = insights?.recommendations ?? [
+    { category: 'Contrast',    text: 'Reduce background contrast slightly to redirect leaked attention toward the title.' },
+    { category: 'Composition', text: 'Consider increasing separation between the face and headline to avoid visual crowding.' },
+    { category: 'Hierarchy',   text: 'Your primary subject already receives strong predicted attention—no changes needed there.' },
+  ];
 
   useEffect(() => {
     // Only run animations if user hasn't requested reduced motion
@@ -123,15 +142,13 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
     return () => ctx.revert();
   }, []);
 
-  const handleCategorySelect = (category: Category) => {
+  const handleCategorySelect = (category: string) => {
     if (selectedCategory === category) {
       setSelectedCategory(null);
     } else {
       setSelectedCategory(category);
-      
-      // Animate selection transition
-      gsap.fromTo('.category-detail-text', 
-        { opacity: 0, y: 10 }, 
+      gsap.fromTo('.category-detail-text',
+        { opacity: 0, y: 10 },
         { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
       );
     }
@@ -139,7 +156,7 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
 
   const getActiveData = () => {
     if (!selectedCategory) return null;
-    return budgetData.find(d => d.name === selectedCategory);
+    return budgetData.find((d: {name: string}) => d.name === selectedCategory);
   };
 
   return (
@@ -176,12 +193,6 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
                 >
                   <Activity className="w-4 h-4" /> Heatmap
                 </button>
-                <button 
-                  onClick={() => setViewMode('regions')}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${viewMode === 'regions' ? 'bg-[#121214] text-white shadow-sm' : 'text-[#4A4950] hover:text-[#121214]'}`}
-                >
-                  <Layers className="w-4 h-4" /> Regions
-                </button>
               </div>
             </div>
 
@@ -194,9 +205,11 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
                   className={`w-full h-full object-cover transition-opacity duration-500 ${selectedCategory ? 'opacity-40' : 'opacity-100'}`} 
                 />
                 
-                {/* Heatmap Layer */}
+                {/* Real ML Heatmap Layer — if overlayUrl provided, use it; otherwise fall back to CSS gradient */}
                 {viewMode === 'heatmap' && !selectedCategory && (
-                  <div className="attention-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: 'radial-gradient(circle at 40% 30%, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at 70% 50%, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)' }}></div>
+                  overlayUrl
+                    ? <img src={overlayUrl} alt="Predicted attention heatmap" className="absolute inset-0 w-full h-full object-contain opacity-90 mix-blend-normal" />
+                    : <div className="attention-heatmap absolute inset-0 mix-blend-screen opacity-90 transition-opacity duration-500" style={{ backgroundImage: 'radial-gradient(circle at 40% 30%, rgba(239,68,68,0.8) 0%, rgba(249,115,22,0.6) 20%, transparent 60%), radial-gradient(circle at 70% 50%, rgba(245,158,11,0.7) 0%, rgba(139,92,246,0.5) 30%, transparent 70%)' }}></div>
                 )}
 
                 {/* Region Overlay Logic */}
@@ -246,55 +259,48 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
               <div className="relative w-40 h-40 mb-6 flex items-center justify-center">
                 <svg className="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#FAF9F5" strokeWidth="8" />
-                  <circle 
-                    className="score-circle transition-all duration-100 ease-out" 
-                    cx="50" 
-                    cy="50" 
-                    r="45" 
-                    fill="none" 
-                    stroke="#8B5CF6" 
-                    strokeWidth="8" 
-                    strokeLinecap="round"
+                  <circle
+                    className="score-circle transition-all duration-100 ease-out"
+                    cx="50" cy="50" r="45"
+                    fill="none" stroke="#8B5CF6" strokeWidth="8" strokeLinecap="round"
                     strokeDasharray="283"
-                    strokeDashoffset="283"
+                    strokeDashoffset={283 - (283 * attentionScore / 100)}
+                    style={{ transition: 'stroke-dashoffset 1.2s ease-out' }}
                   />
                 </svg>
                 <div className="flex items-end gap-1">
-                  <span className="attention-score-value text-5xl font-black text-[#121214] tracking-tighter">0</span>
+                  <span className="attention-score-value text-5xl font-black text-[#121214] tracking-tighter">{attentionScore}</span>
                   <span className="text-2xl font-bold text-[#121214] pb-1">%</span>
                 </div>
               </div>
               <p className="text-sm font-medium text-[#4A4950] max-w-[250px]">
-                Predicted visual attention concentrated on primary elements.
+                {insights ? 'Real ML attention score from Fusion network.' : 'Predicted visual attention concentrated on primary elements.'}
               </p>
             </div>
 
             {/* Attention Distribution (The Budget) */}
             <div className="bg-white border border-[#E6E4DE] rounded-3xl p-8 shadow-sm">
               <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-8">Predicted Attention</h3>
-              
-              {/* Category Selector / Budget List */}
               <div className="budget-list space-y-5">
-                {budgetData.map((item, index) => {
+                {budgetData.map((item: {name: string; percentage: number; insight: string}, index: number) => {
                   const isSelected = selectedCategory === item.name;
                   const opacity = selectedCategory && !isSelected ? 'opacity-40' : 'opacity-100';
-                  
+                  const barColors = ['bg-[#8B5CF6]', 'bg-[#121214]', 'bg-[#8F8D98]', 'bg-[#D5D3CC]', 'bg-[#E6E4DE]', 'bg-[#FAF9F5]'];
                   return (
-                    <div 
-                      key={item.name} 
+                    <div
+                      key={item.name}
                       className={`budget-item group cursor-pointer transition-opacity duration-300 ${opacity}`}
-                      onClick={() => handleCategorySelect(item.name as Category)}
+                      onClick={() => handleCategorySelect(item.name)}
                     >
                       <div className="flex justify-between text-sm font-semibold mb-2">
                         <span className={`transition-colors ${isSelected ? 'text-[#8B5CF6]' : 'text-[#121214] group-hover:text-[#8B5CF6]'}`}>{item.name}</span>
                         <span className={isSelected ? 'text-[#8B5CF6]' : 'text-[#121214]'}>{item.percentage}%</span>
                       </div>
                       <div className="h-2.5 w-full bg-[#FAF9F5] rounded-full overflow-hidden">
-                        <div 
-                          className={`budget-bar-fill h-full rounded-full transition-colors duration-300 ${isSelected ? 'bg-[#8B5CF6]' : index === 0 ? 'bg-[#8B5CF6]' : index === 1 ? 'bg-[#121214]' : index === 2 ? 'bg-[#8F8D98]' : 'bg-[#D5D3CC]'}`} 
-                          data-width={`${item.percentage}%`}
-                          style={{ width: '0%' }}
-                        ></div>
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${isSelected ? 'bg-[#8B5CF6]' : barColors[index] ?? 'bg-[#D5D3CC]'}`}
+                          style={{ width: `${item.percentage}%` }}
+                        />
                       </div>
                     </div>
                   );
@@ -367,12 +373,12 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
                 <span className="relative group cursor-help">
                   <Activity className="w-4 h-4 text-[#8F8D98]" />
                   <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-[#121214] text-white text-xs font-medium rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-10 shadow-xl">
-                    Attention Efficiency estimates how much predicted attention is concentrated on the elements you designate as important.
+                    How much predicted attention falls on primary visual elements.
                   </div>
                 </span>
               </h3>
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-4xl font-black text-[#121214] tracking-tighter">82%</span>
+                <span className="text-4xl font-black text-[#121214] tracking-tighter">{attentionEfficiency}%</span>
               </div>
               <p className="text-sm font-medium text-[#4A4950]">Primary visual elements receive most of the predicted attention.</p>
             </div>
@@ -384,10 +390,10 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
                 Attention Leakage
               </h3>
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-4xl font-black text-orange-500 tracking-tighter">7%</span>
+                <span className="text-4xl font-black text-orange-500 tracking-tighter">{attentionLeakage}%</span>
               </div>
               <p className="text-sm font-medium text-[#4A4950]">
-                7% of predicted attention is concentrated in low-priority background elements.
+                {attentionLeakage}% of predicted attention is concentrated in low-priority elements.
               </p>
             </div>
           </div>
@@ -397,31 +403,29 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
           
           <div className="summary-panel bg-white border border-[#E6E4DE] rounded-3xl p-8 shadow-sm">
-             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-6 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-6 flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-[#8B5CF6]" />
               Analysis Summary
             </h3>
-            
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#E6E4DE]/50">
-                <span className="text-sm font-semibold text-[#4A4950]">Primary attention</span>
-                <span className="text-sm font-bold text-[#121214]">Face + Title</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#E6E4DE]/50">
-                <span className="text-sm font-semibold text-[#4A4950]">Strongest visual anchor</span>
-                <span className="text-sm font-bold text-[#121214]">Face</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#E6E4DE]/50">
-                <span className="text-sm font-semibold text-[#4A4950]">Largest attention competitor</span>
-                <span className="text-sm font-bold text-[#121214]">Title</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#E6E4DE]/50">
-                <span className="text-sm font-semibold text-[#4A4950]">Potential distraction</span>
-                <span className="text-sm font-bold text-[#121214]">Background</span>
-              </div>
+              {[
+                { label: 'Primary attention',               value: primaryAttention },
+                { label: 'Strongest visual anchor',         value: strongestAnchor },
+                { label: 'Largest attention competitor',    value: largestCompetitor },
+                { label: 'Potential distraction',           value: potentialDistraction },
+              ].map(row => (
+                <div key={row.label} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#E6E4DE]/50 last:border-0">
+                  <span className="text-sm font-semibold text-[#4A4950]">{row.label}</span>
+                  <span className="text-sm font-bold text-[#121214]">{row.value}</span>
+                </div>
+              ))}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3">
                 <span className="text-sm font-semibold text-[#4A4950]">Alignment with intended hierarchy</span>
-                <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100">High</span>
+                <span className={`text-sm font-bold px-2 py-0.5 rounded-md border ${
+                  alignmentRating === 'High'   ? 'text-green-600 bg-green-50 border-green-100' :
+                  alignmentRating === 'Medium' ? 'text-yellow-600 bg-yellow-50 border-yellow-100' :
+                                                 'text-red-600 bg-red-50 border-red-100'
+                }`}>{alignmentRating}</span>
               </div>
             </div>
           </div>
@@ -429,37 +433,21 @@ export const AttentionBudget: React.FC<AttentionBudgetProps> = ({ isEmbedded = f
           <div className="recommendations bg-white border border-[#E6E4DE] rounded-3xl p-8 shadow-sm">
             <h3 className="text-sm font-bold text-[#4A4950] tracking-wide uppercase mb-6 flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-yellow-500" />
-              AI Recommendations
+              {insights ? 'AI Recommendations' : 'Recommendations'}
+              {insights && <span className="text-[10px] font-semibold text-[#8F8D98] bg-[#FAF9F5] border border-[#E6E4DE] rounded-full px-2 py-0.5 ml-1">AI-GENERATED</span>}
             </h3>
-            
             <div className="space-y-4">
-              <div className="recommendation-item p-4 bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#E6E4DE] flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="text-xs font-bold text-[#121214]">1</span>
+              {recommendations.map((rec: {category: string; text: string}, i: number) => (
+                <div key={i} className="recommendation-item p-4 bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-white border border-[#E6E4DE] flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="text-xs font-bold text-[#121214]">{i + 1}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-[#8F8D98] uppercase tracking-wider block mb-1">{rec.category}</span>
+                    <p className="text-sm font-medium text-[#121214]">{rec.text}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[10px] font-bold text-[#8F8D98] uppercase tracking-wider block mb-1">Contrast</span>
-                  <p className="text-sm font-medium text-[#121214]">Reduce background contrast slightly to redirect leaked attention toward the title.</p>
-                </div>
-              </div>
-              <div className="recommendation-item p-4 bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#E6E4DE] flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="text-xs font-bold text-[#121214]">2</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-[#8F8D98] uppercase tracking-wider block mb-1">Composition</span>
-                  <p className="text-sm font-medium text-[#121214]">Consider increasing separation between the face and headline to avoid visual crowding.</p>
-                </div>
-              </div>
-              <div className="recommendation-item p-4 bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#E6E4DE] flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="text-xs font-bold text-[#121214]">3</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-[#8F8D98] uppercase tracking-wider block mb-1">Hierarchy</span>
-                  <p className="text-sm font-medium text-[#121214]">Your primary subject already receives strong predicted attention—no changes needed there.</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
           

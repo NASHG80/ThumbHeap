@@ -2,199 +2,410 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppNavbar } from '../components/AppNavbar';
 import { useAuth } from '../context/AuthContext';
-import { Upload, Image as ImageIcon, X, RefreshCw, BarChart2, Eye, Layout, AlertCircle, ArrowRight, Activity, MousePointer2, UserSquare2, Type, TypeIcon, Image as ImagePlaceholder } from 'lucide-react';
+import {
+  Upload, RefreshCw, Activity, AlertCircle, Eye, LayoutGrid,
+  MessageSquare, Lightbulb, Users, Type, Package, ChevronDown, ChevronUp,
+} from 'lucide-react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { AttentionBudget } from './AttentionBudget';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { analyzeImage } from '../lib/api';
+import type { AnalysisResult } from '../lib/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
-type AppState = 'empty' | 'uploaded' | 'analyzing' | 'results';
-type ViewMode = 'original' | 'heatmap' | 'scan';
+type AppState = 'empty' | 'uploaded' | 'analyzing' | 'results' | 'error';
+type ViewMode = 'original' | 'heatmap';
 
-export const Analyze: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>('empty');
-  const [isDragging, setIsDragging] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+const LOADING_STEPS = [
+  'Detecting visual elements…',
+  'Analysing faces and text…',
+  'Computing saliency…',
+  'Mapping visual attention…',
+  'Generating heatmap…',
+  'Requesting AI insights…',
+];
+
+// ─── Detection summary card ────────────────────────────────────────────────
+function DetectionCard({ icon, label, count }: { icon: React.ReactNode; label: string; count: number }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl p-4 min-w-[90px]">
+      <div className="text-[#8B5CF6]">{icon}</div>
+      <span className="text-2xl font-bold text-[#121214] tabular-nums">{count}</span>
+      <span className="text-xs font-semibold text-[#8F8D98] uppercase tracking-widest">{label}</span>
+    </div>
+  );
+}
+
+// ─── AI Insights panel ────────────────────────────────────────────────────
+function InsightsPanel({ insights }: { insights: AnalysisResult['insights'] }) {
+  const [open, setOpen] = useState(true);
+
+  if (!insights) {
+    return (
+      <div className="bg-[#FAF9F5] border border-[#E6E4DE] rounded-2xl p-4 text-sm text-[#8F8D98] italic">
+        AI insights are temporarily unavailable.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-[#E6E4DE] rounded-2xl overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-[#121214] hover:bg-[#FAF9F5] transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-[#8B5CF6]" />
+          AI Insights
+          <span className="text-[10px] font-semibold text-[#8F8D98] bg-[#FAF9F5] border border-[#E6E4DE] rounded-full px-2 py-0.5 ml-1">
+            AI-GENERATED
+          </span>
+        </span>
+        {open ? <ChevronUp className="w-4 h-4 text-[#8F8D98]" /> : <ChevronDown className="w-4 h-4 text-[#8F8D98]" />}
+      </button>
+
+      {open && (
+        <div className="px-5 pb-5 space-y-5 border-t border-[#E6E4DE]">
+          {/* Summary */}
+          <div className="pt-4">
+            <p className="text-sm text-[#4A4950] leading-relaxed">{insights.summary}</p>
+          </div>
+
+          {/* Attention observations */}
+          <div>
+            <h4 className="text-xs font-bold text-[#121214] uppercase tracking-widest mb-3">
+              Attention Observations
+            </h4>
+            <ul className="space-y-2">
+              {insights.attention_observations.map((obs, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-[#4A4950] leading-relaxed">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#8B5CF6] shrink-0" />
+                  {obs}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Suggestions */}
+          <div>
+            <h4 className="text-xs font-bold text-[#121214] uppercase tracking-widest mb-3">
+              Thumbnail Suggestions
+            </h4>
+            <ul className="space-y-2">
+              {insights.thumbnail_suggestions.map((s, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-[#4A4950] leading-relaxed">
+                  <span className="mt-0.5 shrink-0 text-[#8B5CF6] font-bold text-xs">
+                    {i + 1}.
+                  </span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Full results view ─────────────────────────────────────────────────────
+function ResultsView({
+  localPreview,
+  result,
+  onReset,
+}: {
+  localPreview: string;
+  result: AnalysisResult;
+  onReset: () => void;
+}) {
   const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
-  
-  const pageRef = useRef<HTMLDivElement>(null);
-  const uploadZoneRef = useRef<HTMLDivElement>(null);
-  const loadingSequenceRef = useRef<HTMLDivElement>(null);
+  const displayUrl = viewMode === 'heatmap' && result.overlay_url ? result.overlay_url : localPreview;
+
+  return (
+    <div className="relative flex flex-col items-center w-full gap-6">
+      {/* Reset button */}
+      <button
+        onClick={onReset}
+        className="z-50 px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold
+                   hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
+      >
+        <RefreshCw className="w-4 h-4" />
+        Analyse Another Thumbnail
+      </button>
+
+      <div className="w-full max-w-4xl mx-auto space-y-5">
+
+        {/* Image comparison card */}
+        <div className="bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5">
+          {/* Toggle */}
+          <div className="flex items-center gap-1 mb-4 bg-[#FAF9F5] border border-[#E6E4DE] rounded-xl p-1 w-fit">
+            <button
+              onClick={() => setViewMode('original')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+                ${viewMode === 'original'
+                  ? 'bg-white text-[#121214] shadow-sm border border-[#E6E4DE]'
+                  : 'text-[#8F8D98] hover:text-[#4A4950]'}`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Original
+            </button>
+            <button
+              onClick={() => setViewMode('heatmap')}
+              disabled={!result.overlay_url}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+                ${viewMode === 'heatmap'
+                  ? 'bg-white text-[#121214] shadow-sm border border-[#E6E4DE]'
+                  : 'text-[#8F8D98] hover:text-[#4A4950]'}
+                disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Attention Heatmap
+            </button>
+          </div>
+
+          {/* Image */}
+          <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center">
+            <img
+              key={displayUrl}
+              src={displayUrl}
+              alt={viewMode === 'heatmap' ? 'Predicted attention heatmap overlay' : 'Original thumbnail'}
+              className="w-full h-full object-contain transition-opacity duration-300"
+            />
+            {/* Label badge */}
+            <div className="absolute top-3 left-3">
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full
+                ${viewMode === 'heatmap'
+                  ? 'bg-[#8B5CF6] text-white'
+                  : 'bg-black/60 text-white backdrop-blur-sm'}`}>
+                {viewMode === 'heatmap' ? 'Predicted Attention' : 'Original'}
+              </span>
+            </div>
+          </div>
+
+          {viewMode === 'heatmap' && (
+            <p className="mt-3 text-xs text-[#8F8D98] text-center">
+              Warm regions = high predicted visual attention · Cool regions = low attention
+            </p>
+          )}
+        </div>
+
+        {/* Detection summary */}
+        <div className="bg-white border border-[#E6E4DE] rounded-3xl p-5 shadow-xl shadow-black/5">
+          <h3 className="text-sm font-bold text-[#121214] uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#8B5CF6]" />
+            Detection Summary
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            <DetectionCard
+              icon={<Type className="w-5 h-5" />}
+              label="Text"
+              count={result.detections.texts}
+            />
+            <DetectionCard
+              icon={<Users className="w-5 h-5" />}
+              label="Faces"
+              count={result.detections.faces}
+            />
+            <DetectionCard
+              icon={<Package className="w-5 h-5" />}
+              label="Objects"
+              count={result.detections.objects}
+            />
+          </div>
+        </div>
+
+        {/* AI insights */}
+        <div className="shadow-xl shadow-black/5 rounded-3xl overflow-hidden">
+          <InsightsPanel insights={result.insights} />
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Analyze page ─────────────────────────────────────────────────────
+export const Analyze: React.FC = () => {
+  const [appState, setAppState]         = useState<AppState>('empty');
+  const [isDragging, setIsDragging]     = useState(false);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [analysisError, setAnalysisError]   = useState<string | null>(null);
+  const [loadingStep, setLoadingStep]   = useState(0);
+
+  const pageRef            = useRef<HTMLDivElement>(null);
+  const uploadZoneRef      = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const stepTimerRef       = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const navigate = useNavigate();
   const { token, isAuthenticated } = useAuth();
 
-  // Initial page load animation
+  // Page load animations
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo('.analyze-header', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
-      gsap.fromTo('.analyze-title', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.1, ease: 'power3.out' });
-      gsap.fromTo('.analyze-subtitle', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
-      gsap.fromTo('.upload-zone', { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.8, delay: 0.3, ease: 'power3.out' });
+      gsap.fromTo('.analyze-title',  { opacity: 0, y: 20  }, { opacity: 1, y: 0, duration: 0.8, delay: 0.1, ease: 'power3.out' });
+      gsap.fromTo('.upload-zone',    { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.8, delay: 0.3, ease: 'power3.out' });
     }, pageRef);
     return () => ctx.revert();
   }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!isDragging) setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  };
-
-  const handleFile = async (file: File) => {
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
-    
-    // If authenticated, upload to Cloudinary via backend
-    if (isAuthenticated && token) {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        // We do this asynchronously so it doesn't block the UI transition
-        fetch('http://localhost:8000/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        }).then(res => res.json())
-          .then(data => {
-             console.log("Cloudinary Upload Success:", data.url);
-             // Optionally update imagePreview with Cloudinary URL
-             // setImagePreview(data.url);
-          }).catch(err => console.error("Cloudinary Upload Error:", err));
-      } catch (e) {
-        console.error("Upload failed", e);
+  // Clean up object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (localPreview && localPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(localPreview);
       }
+    };
+  }, [localPreview]);
+
+  // ── Drag-and-drop ──────────────────────────────────────────────────────
+  const handleDragOver  = (e: React.DragEvent) => { e.preventDefault(); if (!isDragging) setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop      = (e: React.DragEvent) => {
+    e.preventDefault(); setIsDragging(false);
+    if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
+  };
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) handleFile(e.target.files[0]);
+  };
+
+  const handleFile = (file: File) => {
+    // Validate image type
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setAnalysisError('Please upload a PNG, JPG, or WEBP image.');
+      return;
+    }
+    // Warn on very large files (>20 MB)
+    if (file.size > 20 * 1024 * 1024) {
+      setAnalysisError('File is too large. Please use an image under 20 MB.');
+      return;
     }
 
-    // Transition to uploaded state
+    setAnalysisError(null);
+    setAnalysisResult(null);
+
+    if (localPreview?.startsWith('blob:')) URL.revokeObjectURL(localPreview);
+    const preview = URL.createObjectURL(file);
+    setLocalPreview(preview);
+    setSelectedFile(file);
+
     gsap.to('.upload-zone', {
-      opacity: 0,
-      scale: 0.95,
-      duration: 0.4,
+      opacity: 0, scale: 0.95, duration: 0.4,
       onComplete: () => {
         setAppState('uploaded');
         setTimeout(() => {
-          gsap.fromTo('.analysis-workspace', 
-            { opacity: 0, y: 20 }, 
-            { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }
-          );
+          gsap.fromTo('.analysis-workspace', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
         }, 50);
-      }
+      },
     });
   };
 
   const loadSample = () => {
-    setImagePreview('https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80');
-    
+    const sampleUrl = 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=1280&q=80';
+    setLocalPreview(sampleUrl);
+    setSelectedFile(null); // sample is URL-only, not a File
+
     gsap.to('.upload-zone', {
-      opacity: 0,
-      scale: 0.95,
-      duration: 0.4,
+      opacity: 0, scale: 0.95, duration: 0.4,
       onComplete: () => {
         setAppState('uploaded');
         setTimeout(() => {
-          gsap.fromTo('.analysis-workspace', 
-            { opacity: 0, y: 20 }, 
-            { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }
-          );
+          gsap.fromTo('.analysis-workspace', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
         }, 50);
-      }
+      },
     });
   };
 
-  const startAnalysis = () => {
+  // ── Real analysis call ─────────────────────────────────────────────────
+  const startAnalysis = async () => {
+    if (!selectedFile) {
+      setAnalysisError('Please select a real image file to analyse (sample URLs cannot be sent to the backend).');
+      return;
+    }
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
+
+    setAnalysisError(null);
     setAppState('analyzing');
-    
-    setTimeout(() => {
-      const tl = gsap.timeline({
+    setLoadingStep(0);
+
+    // Cycle through loading step labels while the request runs
+    let step = 0;
+    stepTimerRef.current = setInterval(() => {
+      step = (step + 1) % LOADING_STEPS.length;
+      setLoadingStep(step);
+    }, 1800);
+
+    // Scanning animation
+    gsap.fromTo('.analysis-scan-line',
+      { top: '0%', opacity: 0 },
+      { top: '100%', opacity: 1, duration: 2, ease: 'linear', repeat: -1, yoyo: true }
+    );
+
+    try {
+      const result = await analyzeImage(selectedFile, token);
+      clearInterval(stepTimerRef.current!);
+
+      setAnalysisResult(result);
+
+      gsap.to('.loading-overlay', {
+        opacity: 0, duration: 0.4,
         onComplete: () => {
-          showResults();
-        }
+          setAppState('results');
+          setTimeout(() => {
+            if (resultsContainerRef.current) {
+              gsap.fromTo(resultsContainerRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
+              );
+            }
+          }, 50);
+        },
       });
-      timelineRef.current = tl;
-
-      // Scanning line animation
-      tl.fromTo('.analysis-scan-line', 
-        { top: '0%', opacity: 0 },
-        { top: '100%', opacity: 1, duration: 2, ease: 'linear', repeat: 1, yoyo: true }
-      );
-      
-      // Step labels sequence
-      const steps = document.querySelectorAll('.loading-step');
-      steps.forEach((step, i) => {
-        tl.fromTo(step, 
-          { opacity: 0, y: 10 },
-          { opacity: 1, y: 0, duration: 0.4 },
-          i * 0.6
-        );
-      });
-    }, 100);
+    } catch (err: any) {
+      clearInterval(stepTimerRef.current!);
+      setAnalysisError(err.message ?? 'Analysis failed. Please try again.');
+      setAppState('uploaded');
+    }
   };
 
-  const showResults = () => {
-    gsap.to('.loading-overlay', {
-      opacity: 0,
-      duration: 0.5,
-      onComplete: () => {
-        setAppState('results');
-        
-        setTimeout(() => {
-          if (resultsContainerRef.current) {
-            gsap.set(resultsContainerRef.current, { clearProps: 'all' });
-            gsap.fromTo(resultsContainerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
-          }
-        }, 50);
-      }
-    });
-  };
-
-  const replaceThumbnail = () => {
-    const ctx = gsap.context(() => {
+  const resetToEmpty = () => {
+    if (resultsContainerRef.current) {
       gsap.to(resultsContainerRef.current, {
-        opacity: 0,
-        y: 20,
-        duration: 0.4,
+        opacity: 0, y: 20, duration: 0.4,
         onComplete: () => {
-          setImagePreview(null);
+          if (localPreview?.startsWith('blob:')) URL.revokeObjectURL(localPreview);
+          setLocalPreview(null);
+          setSelectedFile(null);
+          setAnalysisResult(null);
+          setAnalysisError(null);
           setAppState('empty');
-          setViewMode('heatmap');
-        }
+        },
       });
-    });
+    } else {
+      setLocalPreview(null);
+      setSelectedFile(null);
+      setAnalysisResult(null);
+      setAnalysisError(null);
+      setAppState('empty');
+    }
   };
 
+  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div ref={pageRef} className="analyze-page min-h-screen bg-[#FAF9F5] text-[#121214] font-sans selection:bg-purple-100 selection:text-purple-900 pb-20">
       <AppNavbar />
-      
+
       <main className="pt-24 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
-        
 
-
-        {/* Empty State */}
+        {/* ── Empty state ─────────────────────────────────────────────── */}
         {appState === 'empty' && (
           <div className="flex flex-col items-center w-full">
             <div className="analyze-header text-center max-w-3xl mx-auto mb-10">
@@ -202,136 +413,188 @@ export const Analyze: React.FC = () => {
                 See what viewers see first.
               </h1>
             </div>
-            <div 
-              ref={uploadZoneRef}
-            className={`upload-zone relative w-full max-w-4xl mx-auto h-[400px] border-2 border-dashed rounded-3xl transition-all duration-300 flex flex-col items-center justify-center overflow-hidden bg-white group
-              ${isDragging ? 'border-[#8B5CF6] bg-purple-50/50' : 'border-[#E6E4DE] hover:border-[#D5D3CC]'}`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            {/* Subtle AI visualization background */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-              <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-[#8B5CF6] blur-3xl"></div>
-              <div className="absolute bottom-1/3 right-1/4 w-48 h-48 rounded-full bg-orange-500 blur-3xl"></div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[linear-gradient(rgba(18,18,20,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,20,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-            </div>
 
-            <div className="z-10 text-center flex flex-col items-center">
-              <div className={`upload-icon w-16 h-16 rounded-2xl bg-[#FAF9F5] border border-[#E6E4DE] flex items-center justify-center mb-6 text-[#4A4950] transition-transform duration-300 ${isDragging ? '-translate-y-2' : ''}`}>
-                <Upload className="w-8 h-8" />
+            {analysisError && (
+              <div className="mb-6 max-w-lg w-full flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-4 py-3 text-sm">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                {analysisError}
               </div>
-              
-              <h3 className="upload-title text-xl font-bold text-[#121214] mb-2">
-                {isDragging ? 'Drop to analyze' : 'Drop your thumbnail here'}
-              </h3>
-              <p className="upload-description text-[#4A4950] mb-8">
-                or choose an image from your device
-              </p>
-              
-              <label className="upload-button inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-[#121214] hover:bg-[#25252A] rounded-xl transition-colors cursor-pointer shadow-sm">
-                Upload Thumbnail
-                <input type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleFileInput} />
-              </label>
-              
-              <p className="text-xs text-[#8F8D98] mt-4 font-medium tracking-wide">
-                PNG, JPG, WEBP · Recommended 1280 × 720
-              </p>
+            )}
 
-              <button 
-                onClick={loadSample}
-                className="sample-button mt-8 text-sm font-semibold text-[#8B5CF6] hover:text-[#7C3AED] transition-colors"
-              >
-                Try a sample thumbnail
-              </button>
+            <div
+              ref={uploadZoneRef}
+              className={`upload-zone relative w-full max-w-4xl mx-auto h-[400px] border-2 border-dashed rounded-3xl
+                transition-all duration-300 flex flex-col items-center justify-center overflow-hidden bg-white group
+                ${isDragging ? 'border-[#8B5CF6] bg-purple-50/50' : 'border-[#E6E4DE] hover:border-[#D5D3CC]'}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {/* Background decoration */}
+              <div className="absolute inset-0 pointer-events-none opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-[#8B5CF6] blur-3xl" />
+                <div className="absolute bottom-1/3 right-1/4 w-48 h-48 rounded-full bg-orange-500 blur-3xl" />
+              </div>
+
+              <div className="z-10 text-center flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-2xl bg-[#FAF9F5] border border-[#E6E4DE] flex items-center justify-center mb-6
+                  text-[#4A4950] transition-transform duration-300 ${isDragging ? '-translate-y-2' : ''}`}>
+                  <Upload className="w-8 h-8" />
+                </div>
+
+                <h3 className="text-xl font-bold text-[#121214] mb-2">
+                  {isDragging ? 'Drop to analyse' : 'Drop your thumbnail here'}
+                </h3>
+                <p className="text-[#4A4950] mb-8">or choose an image from your device</p>
+
+                <label className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white
+                  bg-[#121214] hover:bg-[#25252A] rounded-xl transition-colors cursor-pointer shadow-sm">
+                  Upload Thumbnail
+                  <input type="file" className="hidden" accept="image/png,image/jpeg,image/webp" onChange={handleFileInput} />
+                </label>
+
+                <p className="text-xs text-[#8F8D98] mt-4 font-medium tracking-wide">
+                  PNG, JPG, WEBP · Recommended 1280 × 720
+                </p>
+
+                <button onClick={loadSample} className="mt-8 text-sm font-semibold text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+                  Try a sample thumbnail
+                </button>
+              </div>
             </div>
-          </div>
           </div>
         )}
 
-        {/* Uploaded (Pre-analysis) State */}
+        {/* ── Uploaded (pre-analysis) state ───────────────────────────── */}
         {appState === 'uploaded' && (
           <div className="analysis-workspace w-full max-w-4xl mx-auto">
-            <div className="bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5">
-              <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center group">
-                <img src={imagePreview!} alt="Thumbnail preview" className="w-full h-full object-contain" />
+            {analysisError && (
+              <div className="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-4 py-3 text-sm">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                {analysisError}
               </div>
-              
+            )}
+
+            <div className="bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5">
+              <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video flex items-center justify-center">
+                <img src={localPreview!} alt="Thumbnail preview" className="w-full h-full object-contain" />
+              </div>
+
               <div className="flex flex-col sm:flex-row items-center justify-between mt-6 px-2 gap-4">
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-[#121214]">thumbnail_vfinal.jpg</span>
-                  <span className="text-xs text-[#8F8D98] font-medium">1280 × 720 · 1.2 MB</span>
+                  <span className="text-sm font-bold text-[#121214]">
+                    {selectedFile ? selectedFile.name : 'sample-thumbnail.jpg'}
+                  </span>
+                  <span className="text-xs text-[#8F8D98] font-medium">
+                    {selectedFile
+                      ? `${(selectedFile.size / 1024).toFixed(0)} KB`
+                      : 'Sample image · click Analyse to use a real file'}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setAppState('empty')}
+                  <button
+                    onClick={() => { setAppState('empty'); setAnalysisError(null); }}
                     className="px-4 py-2 text-sm font-semibold text-[#4A4950] hover:text-[#121214] hover:bg-[#FAF9F5] rounded-xl transition-colors"
                   >
                     Remove
                   </button>
-                  <button 
+                  <button
                     onClick={startAnalysis}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-[#8B5CF6] hover:bg-[#7C3AED] rounded-xl transition-colors shadow-md shadow-purple-500/20"
+                    disabled={!selectedFile}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white
+                      bg-[#8B5CF6] hover:bg-[#7C3AED] rounded-xl transition-colors shadow-md shadow-purple-500/20
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={!selectedFile ? 'Upload a real image file to analyse' : 'Analyse thumbnail'}
                   >
                     <Activity className="w-4 h-4" />
-                    Analyze Thumbnail
+                    Analyse Thumbnail
                   </button>
+                </div>
+              </div>
+
+              {!selectedFile && (
+                <p className="mt-3 text-xs text-[#8F8D98] text-center">
+                  Sample thumbnails can be previewed but must be uploaded as a file to run analysis.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Analysing (loading) state ────────────────────────────────── */}
+        {appState === 'analyzing' && (
+          <div className="analysis-workspace w-full max-w-4xl mx-auto relative">
+            <div className="bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5 relative overflow-hidden loading-overlay">
+              <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video">
+                <img src={localPreview!} alt="Analysing" className="w-full h-full object-contain opacity-60" />
+
+                {/* Scanning line */}
+                <div className="analysis-scan-line absolute left-0 w-full h-32 bg-gradient-to-b from-transparent via-[#8B5CF6]/30 to-[#8B5CF6]/80 border-b border-[#8B5CF6] blur-sm z-10 -translate-y-full" />
+
+                {/* Centred status */}
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-6 shadow-2xl">
+                    <Activity className="w-8 h-8 text-white animate-pulse" />
+                  </div>
+                  <p className="text-sm font-semibold text-white animate-pulse min-h-[20px]">
+                    {LOADING_STEPS[loadingStep]}
+                  </p>
+                  <p className="text-xs text-white/50 mt-2">This may take 20–60 seconds</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Analyzing (Loading) State */}
-        {appState === 'analyzing' && (
-          <div className="analysis-workspace w-full max-w-4xl mx-auto relative">
-            <div className="bg-white border border-[#E6E4DE] rounded-3xl p-4 shadow-xl shadow-black/5 relative overflow-hidden loading-overlay">
-              <div className="relative rounded-2xl overflow-hidden bg-[#121214] aspect-video">
-                <img src={imagePreview!} alt="Thumbnail analyzing" className="w-full h-full object-contain opacity-70" />
-                
-                {/* AI Scanning Line */}
-                <div className="analysis-scan-line absolute left-0 w-full h-32 bg-gradient-to-b from-transparent via-[#8B5CF6]/30 to-[#8B5CF6]/80 border-b border-[#8B5CF6] blur-sm z-10 -translate-y-full"></div>
-                
-                {/* Centered Processing State */}
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-6 shadow-2xl">
-                    <Activity className="w-8 h-8 text-white animate-pulse" />
-                  </div>
-                  
-                  <div className="h-8 relative overflow-hidden w-64 text-center">
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Detecting visual hierarchy...</div>
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Analyzing faces...</div>
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Reading text...</div>
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Calculating saliency...</div>
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Mapping attention...</div>
-                    <div className="absolute inset-x-0 loading-step text-sm font-semibold text-white opacity-0 absolute">Building your attention map...</div>
-                  </div>
-                </div>
+        {/* ── Results state ────────────────────────────────────────────── */}
+        <div ref={resultsContainerRef} className={`w-full ${appState === 'results' ? 'block' : 'hidden'}`}>
+          {appState === 'results' && analysisResult && (
+            <div className="relative flex flex-col items-center w-full gap-6">
+
+              {/* Reset button */}
+              <button
+                onClick={resetToEmpty}
+                className="z-50 px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold
+                           hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Analyse Another Thumbnail
+              </button>
+
+              {/* Full AttentionBudget analytics page with real heatmap overlay */}
+              <div className="w-full">
+                <AttentionBudget
+                  isEmbedded={true}
+                  imageUrl={localPreview || undefined}
+                  overlayUrl={analysisResult.overlay_url}
+                  insights={analysisResult.insights}
+                />
               </div>
+
             </div>
-          </div>
-        )}
-        
-        {/* Results State */}
-        <div 
-          ref={resultsContainerRef} 
-          className={`w-full ${appState === 'results' ? 'block' : 'hidden'}`}
-        >
-          {appState === 'results' && (
-             <div className="relative flex flex-col items-center w-full">
-                <button 
-                  onClick={replaceThumbnail}
-                  className="mb-4 z-50 px-6 py-2.5 bg-white border border-[#E6E4DE] text-[#121214] rounded-full text-sm font-bold hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-sm"
-                >
-                  <RefreshCw className="w-4 h-4" /> Analyze Another Thumbnail
-                </button>
-                <div className="w-full">
-                  <AttentionBudget isEmbedded={true} imageUrl={imagePreview || undefined} />
-                </div>
-             </div>
           )}
         </div>
+
+        {/* ── Error state (hard failure) ───────────────────────────────── */}
+        {appState === 'error' && (
+          <div className="flex flex-col items-center gap-6 mt-20">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-[#121214] mb-1">Analysis failed</h3>
+              <p className="text-sm text-[#8F8D98]">{analysisError}</p>
+            </div>
+            <button
+              onClick={resetToEmpty}
+              className="px-6 py-2.5 bg-[#121214] text-white rounded-xl text-sm font-semibold hover:bg-[#25252A] transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
       </main>
     </div>
   );
