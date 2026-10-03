@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 import api.inference_service as inference_service
-from api.groq_insights import generate_insights
+from api.gemini_insights import generate_insights
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
